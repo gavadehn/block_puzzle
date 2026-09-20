@@ -47,9 +47,14 @@ class _GameBoardWidgetState extends State<GameBoardWidget> {
     final shapeTopLeftX = shapeCenterX - (shapeWidth / 2);
     final shapeTopLeftY = shapeCenterY - (shapeHeight / 2);
 
-    // Find the closest grid position (row, col)
-    final closestCol = ((shapeTopLeftX - padding + (totalCellStep / 2)) / totalCellStep).floor();
-    final closestRow = ((shapeTopLeftY - padding + (totalCellStep / 2)) / totalCellStep).floor();
+    // Find the closest grid position (row, col) clamped to valid matrix boundaries
+    final rawCol = ((shapeTopLeftX - padding + (totalCellStep / 2)) / totalCellStep).floor();
+    final rawRow = ((shapeTopLeftY - padding + (totalCellStep / 2)) / totalCellStep).floor();
+
+    final maxRow = size - data.shape.rows;
+    final maxCol = size - data.shape.cols;
+    final closestCol = rawCol.clamp(0, maxCol >= 0 ? maxCol : 0);
+    final closestRow = rawRow.clamp(0, maxRow >= 0 ? maxRow : 0);
 
     bool isSnapValid = false;
     int? validRow;
@@ -110,18 +115,22 @@ class _GameBoardWidgetState extends State<GameBoardWidget> {
     const size = GameController.boardSize;
     const padding = 12.0;
     const cellSpacing = DragConstants.cellSpacing;
+    const bottomDropPadding = DragConstants.touchLift + 20.0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxSide = min(constraints.maxWidth, constraints.maxHeight);
-        final boardPx = maxSide.clamp(180.0, 420.0);
+        final availableH = constraints.maxHeight - bottomDropPadding - 10.0;
+        final availableW = constraints.maxWidth - 20.0;
+        final maxSide = min(availableW, availableH);
+        final boardPx = maxSide.clamp(160.0, 420.0);
         _boardPx = boardPx;
 
         final availableSize = boardPx - (padding * 2);
-        final cellSize = ((availableSize - ((size - 1) * cellSpacing)) / size).clamp(16.0, 50.0);
+        final cellSize = ((availableSize - ((size - 1) * cellSpacing)) / size).clamp(14.0, 50.0);
 
         return Center(
           child: DragTarget<DragBlockData>(
+            hitTestBehavior: HitTestBehavior.translucent,
             onWillAcceptWithDetails: (details) {
               _updateHover(details.offset, details.data);
               return true;
@@ -143,65 +152,73 @@ class _GameBoardWidgetState extends State<GameBoardWidget> {
               _clearHover();
             },
             builder: (context, candidateData, rejectedData) {
-              return Container(
-                key: _boardKey,
-                width: boardPx,
-                height: boardPx,
-                padding: const EdgeInsets.all(padding),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF131822),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFF2C3549),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(120),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+              return Padding(
+                padding: const EdgeInsets.only(
+                  top: 10.0,
+                  bottom: bottomDropPadding,
+                  left: 10.0,
+                  right: 10.0,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(size, (r) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: List.generate(size, (c) {
-                        final cellColor = widget.controller.board[r][c];
+                child: Container(
+                  key: _boardKey,
+                  width: boardPx,
+                  height: boardPx,
+                  padding: const EdgeInsets.all(padding),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF131822),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF2C3549),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(120),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(size, (r) {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(size, (c) {
+                          final cellColor = widget.controller.board[r][c];
 
-                        // Check if cell is in active preview
-                        bool isPreview = false;
-                        Color? previewColor;
+                          // Check if cell is in active preview
+                          bool isPreview = false;
+                          Color? previewColor;
 
-                        if (_activeDrag != null &&
-                            _hoverRow != null &&
-                            _hoverCol != null) {
-                          final shape = _activeDrag!.shape;
-                          final shapeR = r - _hoverRow!;
-                          final shapeC = c - _hoverCol!;
+                          if (_activeDrag != null &&
+                              _hoverRow != null &&
+                              _hoverCol != null) {
+                            final shape = _activeDrag!.shape;
+                            final shapeR = r - _hoverRow!;
+                            final shapeC = c - _hoverCol!;
 
-                          if (shapeR >= 0 &&
-                              shapeR < shape.rows &&
-                              shapeC >= 0 &&
-                              shapeC < shape.cols) {
-                            if (shape.matrix[shapeR][shapeC] == 1) {
-                              isPreview = true;
-                              previewColor = shape.color;
+                            if (shapeR >= 0 &&
+                                shapeR < shape.rows &&
+                                shapeC >= 0 &&
+                                shapeC < shape.cols) {
+                              if (shape.matrix[shapeR][shapeC] == 1) {
+                                isPreview = true;
+                                previewColor = shape.color;
+                              }
                             }
                           }
-                        }
 
-                        return BoardCellWidget(
-                          size: cellSize,
-                          color: cellColor,
-                          isPreview: isPreview,
-                          previewColor: previewColor,
-                        );
-                      }),
-                    );
-                  }),
+                          return BoardCellWidget(
+                            size: cellSize,
+                            color: cellColor,
+                            isPreview: isPreview,
+                            previewColor: previewColor,
+                          );
+                        }),
+                      );
+                    }),
+                  ),
                 ),
               );
             },

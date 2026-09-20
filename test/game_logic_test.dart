@@ -60,6 +60,52 @@ void main() {
       expect(controller.canPlace(line4, 1, 0), true);
     });
 
+    test('Placing horizontal shapes (1x1, 1x2, 1x3, 1x4, 1x5) into row 7 (last row)', () {
+      final line1 = const BlockShape(
+        id: 'line1',
+        matrix: [
+          [1],
+        ],
+        color: Colors.yellow,
+        glowColor: Colors.yellowAccent,
+      );
+
+      final line2 = const BlockShape(
+        id: 'line2',
+        matrix: [
+          [1, 1],
+        ],
+        color: Colors.green,
+        glowColor: Colors.greenAccent,
+      );
+
+      final line3 = const BlockShape(
+        id: 'line3',
+        matrix: [
+          [1, 1, 1],
+        ],
+        color: Colors.teal,
+        glowColor: Colors.tealAccent,
+      );
+
+      final line4 = const BlockShape(
+        id: 'line4',
+        matrix: [
+          [1, 1, 1, 1],
+        ],
+        color: Colors.blue,
+        glowColor: Colors.blueAccent,
+      );
+
+      // All horizontal shapes should be placeable in row 7 at valid column coordinates
+      expect(controller.canPlace(line1, 7, 0), true);
+      expect(controller.canPlace(line2, 7, 0), true);
+      expect(controller.canPlace(line3, 7, 0), true);
+      expect(controller.canPlace(line4, 7, 0), true);
+      expect(controller.canPlace(line4, 7, 4), true);
+      expect(controller.canPlace(line4, 7, 5), false); // Out of bounds cols
+    });
+
     test('Clearing full horizontal row and vertical column', () {
       // Fill entire row 0
       for (int c = 0; c < 8; c++) {
