@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/block_shape.dart';
+import '../services/audio_manager.dart';
 
 class ClearedLineInfo {
   final List<int> rows;
@@ -30,6 +31,7 @@ class GameController extends ChangeNotifier {
   int _highScore = 0;
   int _comboStreak = 0;
   bool _isGameOver = false;
+  bool _hasCelebratedRecord = false;
 
   // Cells currently undergoing clearing animation
   final Set<String> _clearingCells = {};
@@ -55,6 +57,7 @@ class GameController extends ChangeNotifier {
     _score = 0;
     _comboStreak = 0;
     _isGameOver = false;
+    _hasCelebratedRecord = false;
     _clearingCells.clear();
     _spawnHand();
     notifyListeners();
@@ -67,7 +70,6 @@ class GameController extends ChangeNotifier {
   }
 
   BlockShape _getRandomShape() {
-    // Weighted selection: higher weight for medium & small shapes
     final list = ShapeCatalog.allShapes;
     return list[_random.nextInt(list.length)];
   }
@@ -114,6 +116,8 @@ class GameController extends ChangeNotifier {
       return false;
     }
 
+    final prevHighScore = _highScore;
+
     // 1. Place shape on board
     for (int r = 0; r < shape.rows; r++) {
       for (int c = 0; c < shape.cols; c++) {
@@ -134,13 +138,21 @@ class GameController extends ChangeNotifier {
     if (clearInfo.hasClear) {
       _score += clearInfo.pointsEarned;
       _comboStreak++;
+      // Play line clear audio
+      AudioManager.instance.playClear();
     } else {
       _comboStreak = 0;
+      // Play block drop audio
+      AudioManager.instance.playDrop();
     }
 
-    // 5. Update High Score
+    // 5. Update High Score and trigger new record fanfare
     if (_score > _highScore) {
       _highScore = _score;
+      if (prevHighScore > 0 && !_hasCelebratedRecord) {
+        _hasCelebratedRecord = true;
+        AudioManager.instance.playNewRecord();
+      }
     }
 
     // 6. Refill hand if all 3 used
@@ -197,14 +209,10 @@ class GameController extends ChangeNotifier {
       // Clear columns
       for (int c in fullCols) {
         for (int r = 0; r < boardSize; r++) {
-          _board[r][r] = null; // will clear
           _board[r][c] = null;
         }
       }
 
-      // Point calculation:
-      // Base: 100 points per line
-      // Multi-line bonus: 1=100, 2=300, 3=600, 4=1000, etc.
       int baseScore = linesCleared * 100;
       int multiBonus = (linesCleared > 1) ? (linesCleared * (linesCleared - 1) * 50) : 0;
       int comboBonus = _comboStreak * 50;
@@ -221,7 +229,6 @@ class GameController extends ChangeNotifier {
   }
 
   void _checkGameOver() {
-    // Check if any available block in hand can be placed somewhere
     bool hasValidMove = false;
     for (final shape in _hand) {
       if (shape != null && canPlaceAnywhere(shape)) {

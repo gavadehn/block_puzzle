@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/audio_manager.dart';
 
 class ScoreBoardWidget extends StatelessWidget {
   final int score;
@@ -65,16 +66,62 @@ class ScoreBoardWidget extends StatelessWidget {
                 ),
               ),
 
-              // Restart Button
-              IconButton(
-                onPressed: onRestart,
-                icon: const Icon(Icons.refresh_rounded, size: 28),
-                color: Colors.white70,
-                tooltip: 'Chơi lại',
-                style: IconButton.styleFrom(
-                  backgroundColor: const Color(0xFF1E2536),
-                  padding: const EdgeInsets.all(10),
-                ),
+              // Action Buttons: Music, Sound, Restart
+              ListenableBuilder(
+                listenable: AudioManager.instance,
+                builder: (context, _) {
+                  final audio = AudioManager.instance;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Music Toggle Button
+                      IconButton(
+                        onPressed: () => audio.toggleMusic(),
+                        icon: Icon(
+                          audio.isMusicEnabled
+                              ? Icons.music_note_rounded
+                              : Icons.music_off_rounded,
+                          size: 22,
+                        ),
+                        color: audio.isMusicEnabled ? const Color(0xFF06D6A0) : Colors.white38,
+                        tooltip: audio.isMusicEnabled ? 'Tắt nhạc nền' : 'Bật nhạc nền',
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFF1E2536),
+                          padding: const EdgeInsets.all(8),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Sound Effects Toggle Button
+                      IconButton(
+                        onPressed: () => audio.toggleSound(),
+                        icon: Icon(
+                          audio.isSoundEnabled
+                              ? Icons.volume_up_rounded
+                              : Icons.volume_off_rounded,
+                          size: 22,
+                        ),
+                        color: audio.isSoundEnabled ? const Color(0xFFFFD166) : Colors.white38,
+                        tooltip: audio.isSoundEnabled ? 'Tắt hiệu ứng âm thanh' : 'Bật hiệu ứng âm thanh',
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFF1E2536),
+                          padding: const EdgeInsets.all(8),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Restart Button
+                      IconButton(
+                        onPressed: onRestart,
+                        icon: const Icon(Icons.refresh_rounded, size: 22),
+                        color: Colors.white70,
+                        tooltip: 'Chơi lại',
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFF1E2536),
+                          padding: const EdgeInsets.all(8),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),

@@ -4,6 +4,8 @@ import 'package:block_puzzle/logic/game_controller.dart';
 import 'package:block_puzzle/models/block_shape.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('Block Puzzle Logic Tests', () {
     late GameController controller;
 
@@ -103,7 +105,7 @@ void main() {
       expect(controller.canPlace(line3, 7, 0), true);
       expect(controller.canPlace(line4, 7, 0), true);
       expect(controller.canPlace(line4, 7, 4), true);
-      expect(controller.canPlace(line4, 7, 5), false); // Out of bounds cols
+      expect(controller.canPlace(line4, 7, 5), false);
     });
 
     test('Clearing full horizontal row and vertical column', () {
