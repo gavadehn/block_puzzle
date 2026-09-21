@@ -41,65 +41,71 @@ class AudioManager extends ChangeNotifier {
     _initialized = true;
 
     try {
-      // Configure global audio context so SFX and BGM mix smoothly without interrupting each other on Android/iOS
-      AudioPlayer.global.setAudioContext(
-        AudioContext(
-          android: const AudioContextAndroid(
-            isSpeakerphoneOn: false,
-            stayAwake: false,
-            contentType: AndroidContentType.music,
-            usageType: AndroidUsageType.game,
-            audioFocus: AndroidAudioFocus.none,
-          ),
-          iOS: AudioContextIOS(
-            category: AVAudioSessionCategory.ambient,
-            options: {
-              AVAudioSessionOptions.mixWithOthers,
-            },
-          ),
-        ),
-      );
-
       _bgmPlayer = AudioPlayer();
       _sfxDropPlayer = AudioPlayer();
       _sfxClearPlayer = AudioPlayer();
       _sfxRecordPlayer = AudioPlayer();
 
-      // Configure BGM Player
-      _bgmPlayer?.setAudioContext(
-        AudioContext(
-          android: const AudioContextAndroid(
-            isSpeakerphoneOn: false,
-            stayAwake: true,
-            contentType: AndroidContentType.music,
-            usageType: AndroidUsageType.game,
-            audioFocus: AndroidAudioFocus.none,
-          ),
-          iOS: AudioContextIOS(
-            category: AVAudioSessionCategory.ambient,
-            options: {AVAudioSessionOptions.mixWithOthers},
-          ),
-        ),
-      );
+      // Configure mobile-only AudioContext for Android & iOS to prevent SFX interrupting BGM
+      if (!kIsWeb &&
+          (defaultTargetPlatform == TargetPlatform.android ||
+              defaultTargetPlatform == TargetPlatform.iOS)) {
+        try {
+          AudioPlayer.global.setAudioContext(
+            AudioContext(
+              android: const AudioContextAndroid(
+                isSpeakerphoneOn: false,
+                stayAwake: false,
+                contentType: AndroidContentType.music,
+                usageType: AndroidUsageType.game,
+                audioFocus: AndroidAudioFocus.none,
+              ),
+              iOS: AudioContextIOS(
+                category: AVAudioSessionCategory.ambient,
+                options: {
+                  AVAudioSessionOptions.mixWithOthers,
+                },
+              ),
+            ),
+          );
 
-      // Configure SFX Players to not steal audio focus
-      final sfxContext = AudioContext(
-        android: const AudioContextAndroid(
-          isSpeakerphoneOn: false,
-          stayAwake: false,
-          contentType: AndroidContentType.sonification,
-          usageType: AndroidUsageType.game,
-          audioFocus: AndroidAudioFocus.none,
-        ),
-        iOS: AudioContextIOS(
-          category: AVAudioSessionCategory.ambient,
-          options: {AVAudioSessionOptions.mixWithOthers},
-        ),
-      );
+          _bgmPlayer?.setAudioContext(
+            AudioContext(
+              android: const AudioContextAndroid(
+                isSpeakerphoneOn: false,
+                stayAwake: true,
+                contentType: AndroidContentType.music,
+                usageType: AndroidUsageType.game,
+                audioFocus: AndroidAudioFocus.none,
+              ),
+              iOS: AudioContextIOS(
+                category: AVAudioSessionCategory.ambient,
+                options: {AVAudioSessionOptions.mixWithOthers},
+              ),
+            ),
+          );
 
-      _sfxDropPlayer?.setAudioContext(sfxContext);
-      _sfxClearPlayer?.setAudioContext(sfxContext);
-      _sfxRecordPlayer?.setAudioContext(sfxContext);
+          final sfxContext = AudioContext(
+            android: const AudioContextAndroid(
+              isSpeakerphoneOn: false,
+              stayAwake: false,
+              contentType: AndroidContentType.sonification,
+              usageType: AndroidUsageType.game,
+              audioFocus: AndroidAudioFocus.none,
+            ),
+            iOS: AudioContextIOS(
+              category: AVAudioSessionCategory.ambient,
+              options: {AVAudioSessionOptions.mixWithOthers},
+            ),
+          );
+
+          _sfxDropPlayer?.setAudioContext(sfxContext);
+          _sfxClearPlayer?.setAudioContext(sfxContext);
+          _sfxRecordPlayer?.setAudioContext(sfxContext);
+        } catch (e) {
+          debugPrint('Mobile AudioContext configuration warning: $e');
+        }
+      }
 
       // On completion, wait 5 seconds of silence before playing next BGM
       _bgmPlayer?.onPlayerComplete.listen((_) {
