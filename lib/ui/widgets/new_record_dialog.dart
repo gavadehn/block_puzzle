@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/block_shape.dart';
+import '../../services/audio_manager.dart';
 import '../../services/high_score_service.dart';
 
 class NewRecordDialog extends StatefulWidget {
@@ -29,6 +30,9 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
     _nameController = TextEditingController(
       text: HighScoreService.instance.lastPlayerName,
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AudioManager.instance.playNewRecord();
+    });
   }
 
   @override

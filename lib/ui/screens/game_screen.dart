@@ -120,10 +120,10 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      // Ensure web browser audio unlocks on first user tap
+    return Listener(
+      // Ensure web browser audio unlocks on any user touch / click gesture
       behavior: HitTestBehavior.translucent,
-      onTapDown: (_) => AudioManager.instance.startBgm(),
+      onPointerDown: (_) => AudioManager.instance.ensureBgmPlaying(),
       child: Scaffold(
         backgroundColor: const Color(0xFF0D111A),
         body: SafeArea(

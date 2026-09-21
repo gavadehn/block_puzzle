@@ -29,7 +29,6 @@ class AudioManager extends ChangeNotifier {
 
   bool _isMusicEnabled = true;
   bool _isSoundEnabled = true;
-  bool _isBgmStarted = false;
   int _lastBgmIndex = -1;
   final Random _random = Random();
 
@@ -60,11 +59,28 @@ class AudioManager extends ChangeNotifier {
     }
   }
 
-  /// Starts background music playback if not already playing
+  /// Ensures BGM is actively playing; unlocks and resumes on user gesture
+  Future<void> ensureBgmPlaying() async {
+    if (!enableAudio || !_isMusicEnabled) return;
+    _ensureInitialized();
+
+    try {
+      final state = _bgmPlayer?.state;
+      if (state == PlayerState.playing) {
+        return;
+      } else if (state == PlayerState.paused) {
+        await _bgmPlayer?.resume().catchError((_) {});
+      } else {
+        await playNextRandomBgm();
+      }
+    } catch (e) {
+      debugPrint('AudioManager ensureBgmPlaying error: $e');
+    }
+  }
+
+  /// Starts background music playback
   Future<void> startBgm() async {
-    if (!enableAudio || !_isMusicEnabled || _isBgmStarted) return;
-    _isBgmStarted = true;
-    await playNextRandomBgm();
+    await ensureBgmPlaying();
   }
 
   /// Picks a random track from the 5 BGM tracks and plays it
@@ -84,10 +100,13 @@ class AudioManager extends ChangeNotifier {
       _lastBgmIndex = nextIndex;
 
       final track = bgmPlaylist[nextIndex];
+      await _bgmPlayer?.stop().catchError((_) {});
       await _bgmPlayer?.setVolume(0.4).catchError((_) {});
-      await _bgmPlayer?.play(AssetSource(track)).catchError((_) {});
+      await _bgmPlayer?.play(AssetSource(track)).catchError((e) {
+        debugPrint('BGM play error (possibly awaiting user gesture): $e');
+      });
     } catch (e) {
-      debugPrint('AudioManager startBgm error: $e');
+      debugPrint('AudioManager playNextRandomBgm error: $e');
     }
   }
 
@@ -95,8 +114,7 @@ class AudioManager extends ChangeNotifier {
   void toggleMusic() {
     _isMusicEnabled = !_isMusicEnabled;
     if (_isMusicEnabled) {
-      _isBgmStarted = true;
-      playNextRandomBgm();
+      ensureBgmPlaying();
     } else {
       _bgmPlayer?.pause().catchError((_) {});
     }
@@ -142,7 +160,9 @@ class AudioManager extends ChangeNotifier {
     try {
       _sfxRecordPlayer?.stop().catchError((_) {});
       _sfxRecordPlayer?.setVolume(1.0).catchError((_) {});
-      _sfxRecordPlayer?.play(AssetSource('soundtrack/newrecord.mp3')).catchError((_) {});
+      _sfxRecordPlayer?.play(AssetSource('soundtrack/newrecord.mp3')).catchError((e) {
+        debugPrint('AudioManager playNewRecord error: $e');
+      });
     } catch (e) {
       debugPrint('AudioManager playNewRecord error: $e');
     }

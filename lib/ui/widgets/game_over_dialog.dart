@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../models/block_shape.dart';
+import '../../services/audio_manager.dart';
 import 'leaderboard_dialog.dart';
 
-class GameOverOverlay extends StatelessWidget {
+class GameOverOverlay extends StatefulWidget {
   final int score;
   final int highScore;
   final GameMode mode;
@@ -16,16 +17,32 @@ class GameOverOverlay extends StatelessWidget {
     required this.onRestart,
   });
 
+  @override
+  State<GameOverOverlay> createState() => _GameOverOverlayState();
+}
+
+class _GameOverOverlayState extends State<GameOverOverlay> {
+  @override
+  void initState() {
+    super.initState();
+    final isNewRecord = widget.score >= widget.highScore && widget.score > 0;
+    if (isNewRecord) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        AudioManager.instance.playNewRecord();
+      });
+    }
+  }
+
   void _showLeaderboard(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => LeaderboardDialog(initialMode: mode),
+      builder: (_) => LeaderboardDialog(initialMode: widget.mode),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isNewRecord = score >= highScore && score > 0;
+    final isNewRecord = widget.score >= widget.highScore && widget.score > 0;
 
     return Container(
       color: Colors.black.withAlpha(200),
@@ -62,7 +79,7 @@ class GameOverOverlay extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Chế độ ${mode.displayName}',
+                'Chế độ ${widget.mode.displayName}',
                 style: const TextStyle(
                   color: Colors.white60,
                   fontSize: 13,
@@ -88,7 +105,7 @@ class GameOverOverlay extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$score',
+                      '${widget.score}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 40,
@@ -105,7 +122,7 @@ class GameOverOverlay extends StatelessWidget {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton.icon(
-                  onPressed: onRestart,
+                  onPressed: widget.onRestart,
                   icon: const Icon(Icons.replay_rounded, size: 22),
                   label: const Text(
                     'CHƠI LẠI',
@@ -135,7 +152,7 @@ class GameOverOverlay extends StatelessWidget {
                   onPressed: () => _showLeaderboard(context),
                   icon: const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD166), size: 20),
                   label: Text(
-                    'BẢNG VÀNG (${mode.displayName.toUpperCase()}) 🏆',
+                    'BẢNG VÀNG (${widget.mode.displayName.toUpperCase()}) 🏆',
                     style: const TextStyle(
                       color: Color(0xFFFFD166),
                       fontSize: 14,
