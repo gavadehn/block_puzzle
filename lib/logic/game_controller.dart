@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/block_shape.dart';
 import '../services/audio_manager.dart';
+import '../services/high_score_service.dart';
 
 class ClearedLineInfo {
   final List<int> rows;
@@ -30,7 +31,6 @@ class GameController extends ChangeNotifier {
 
   int? _selectedHandIndex;
   int _score = 0;
-  int _highScore = 0;
   int _comboStreak = 0;
   bool _isGameOver = false;
 
@@ -43,7 +43,7 @@ class GameController extends ChangeNotifier {
   List<BlockShape?> get hand => _hand;
   int? get selectedHandIndex => _selectedHandIndex;
   int get score => _score;
-  int get highScore => _highScore;
+  int get highScore => max(_score, HighScoreService.instance.getHighestScore(_mode));
   int get comboStreak => _comboStreak;
   bool get isGameOver => _isGameOver;
   Set<String> get clearingCells => _clearingCells;
@@ -203,12 +203,7 @@ class GameController extends ChangeNotifier {
       AudioManager.instance.playDrop();
     }
 
-    // 5. Update High Score (without mid-game fanfare interruption)
-    if (_score > _highScore) {
-      _highScore = _score;
-    }
-
-    // 6. Refill hand if all 3 used
+    // 5. Refill hand if all 3 used
     if (_hand.every((s) => s == null)) {
       _spawnHand();
     }

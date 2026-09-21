@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:block_puzzle/logic/game_controller.dart';
 import 'package:block_puzzle/models/block_shape.dart';
 import 'package:block_puzzle/services/audio_manager.dart';
+import 'package:block_puzzle/services/high_score_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
   AudioManager.enableAudio = false;
 
   group('Block Puzzle Logic Tests', () {
     late GameController controller;
 
-    setUp(() {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      await HighScoreService.instance.loadScores();
       controller = GameController();
     });
 
@@ -165,6 +170,16 @@ void main() {
         expect(controller.board[0][c], isNull);
       }
       expect(controller.score, 110);
+    });
+
+    test('High score is mode-specific and separates Hard and Easy modes', () async {
+      await HighScoreService.instance.addScore('Hard Pro', 3000, GameMode.hard);
+
+      controller.setGameMode(GameMode.hard);
+      expect(controller.highScore, 3000);
+
+      controller.setGameMode(GameMode.easy);
+      expect(controller.highScore, 0);
     });
   });
 }
