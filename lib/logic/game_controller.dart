@@ -33,7 +33,6 @@ class GameController extends ChangeNotifier {
   int _highScore = 0;
   int _comboStreak = 0;
   bool _isGameOver = false;
-  bool _hasCelebratedRecord = false;
 
   final Set<String> _clearingCells = {};
   final Random _random = Random();
@@ -68,7 +67,6 @@ class GameController extends ChangeNotifier {
     _score = 0;
     _comboStreak = 0;
     _isGameOver = false;
-    _hasCelebratedRecord = false;
     _clearingCells.clear();
     _spawnHand();
     notifyListeners();
@@ -176,8 +174,6 @@ class GameController extends ChangeNotifier {
       return false;
     }
 
-    final prevHighScore = _highScore;
-
     // 1. Place shape on board
     for (int r = 0; r < shape.rows; r++) {
       for (int c = 0; c < shape.cols; c++) {
@@ -207,13 +203,9 @@ class GameController extends ChangeNotifier {
       AudioManager.instance.playDrop();
     }
 
-    // 5. Update High Score and trigger record celebration
+    // 5. Update High Score (without mid-game fanfare interruption)
     if (_score > _highScore) {
       _highScore = _score;
-      if (prevHighScore > 0 && !_hasCelebratedRecord) {
-        _hasCelebratedRecord = true;
-        AudioManager.instance.playNewRecord();
-      }
     }
 
     // 6. Refill hand if all 3 used

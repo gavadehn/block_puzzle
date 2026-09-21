@@ -17,6 +17,7 @@ class AudioManager extends ChangeNotifier {
   AudioPlayer? _sfxClearPlayer;
   AudioPlayer? _sfxRecordPlayer;
   bool _initialized = false;
+  int _bgmPlayToken = 0;
 
   // Playlist of 5 background tracks
   static const List<String> bgmPlaylist = [
@@ -40,15 +41,69 @@ class AudioManager extends ChangeNotifier {
     _initialized = true;
 
     try {
+      // Configure global audio context so SFX and BGM mix smoothly without interrupting each other on Android/iOS
+      AudioPlayer.global.setAudioContext(
+        AudioContext(
+          android: const AudioContextAndroid(
+            isSpeakerphoneOn: false,
+            stayAwake: false,
+            contentType: AndroidContentType.music,
+            usageType: AndroidUsageType.game,
+            audioFocus: AndroidAudioFocus.none,
+          ),
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.ambient,
+            options: {
+              AVAudioSessionOptions.mixWithOthers,
+            },
+          ),
+        ),
+      );
+
       _bgmPlayer = AudioPlayer();
       _sfxDropPlayer = AudioPlayer();
       _sfxClearPlayer = AudioPlayer();
       _sfxRecordPlayer = AudioPlayer();
 
+      // Configure BGM Player
+      _bgmPlayer?.setAudioContext(
+        AudioContext(
+          android: const AudioContextAndroid(
+            isSpeakerphoneOn: false,
+            stayAwake: true,
+            contentType: AndroidContentType.music,
+            usageType: AndroidUsageType.game,
+            audioFocus: AndroidAudioFocus.none,
+          ),
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.ambient,
+            options: {AVAudioSessionOptions.mixWithOthers},
+          ),
+        ),
+      );
+
+      // Configure SFX Players to not steal audio focus
+      final sfxContext = AudioContext(
+        android: const AudioContextAndroid(
+          isSpeakerphoneOn: false,
+          stayAwake: false,
+          contentType: AndroidContentType.sonification,
+          usageType: AndroidUsageType.game,
+          audioFocus: AndroidAudioFocus.none,
+        ),
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.ambient,
+          options: {AVAudioSessionOptions.mixWithOthers},
+        ),
+      );
+
+      _sfxDropPlayer?.setAudioContext(sfxContext);
+      _sfxClearPlayer?.setAudioContext(sfxContext);
+      _sfxRecordPlayer?.setAudioContext(sfxContext);
+
+      // On completion, wait 5 seconds of silence before playing next BGM
       _bgmPlayer?.onPlayerComplete.listen((_) {
-        if (_isMusicEnabled) {
-          playNextRandomBgm();
-        }
+        _onBgmTrackFinished();
       });
 
       _sfxDropPlayer?.setReleaseMode(ReleaseMode.stop).catchError((_) {});
@@ -56,6 +111,15 @@ class AudioManager extends ChangeNotifier {
       _sfxRecordPlayer?.setReleaseMode(ReleaseMode.stop).catchError((_) {});
     } catch (e) {
       debugPrint('AudioManager init warning: $e');
+    }
+  }
+
+  void _onBgmTrackFinished() async {
+    final currentToken = ++_bgmPlayToken;
+    // 5 seconds of silence between tracks
+    await Future.delayed(const Duration(seconds: 5));
+    if (_isMusicEnabled && _bgmPlayToken == currentToken) {
+      await playNextRandomBgm();
     }
   }
 
@@ -89,6 +153,7 @@ class AudioManager extends ChangeNotifier {
     _ensureInitialized();
 
     try {
+      _bgmPlayToken++;
       int nextIndex;
       if (bgmPlaylist.length > 1) {
         do {
@@ -113,6 +178,7 @@ class AudioManager extends ChangeNotifier {
   /// Toggle background music ON / OFF
   void toggleMusic() {
     _isMusicEnabled = !_isMusicEnabled;
+    _bgmPlayToken++;
     if (_isMusicEnabled) {
       ensureBgmPlaying();
     } else {
