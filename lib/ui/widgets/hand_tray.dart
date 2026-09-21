@@ -21,8 +21,8 @@ class HandTrayWidget extends StatelessWidget {
           final shape = controller.hand[index];
           if (shape == null) {
             return const SizedBox(
-              width: 90,
-              height: 90,
+              width: 100,
+              height: 100,
             );
           }
 
@@ -32,25 +32,29 @@ class HandTrayWidget extends StatelessWidget {
           return SizedBox(
             width: 100,
             height: 100,
-            child: Center(
-              child: Draggable<DragBlockData>(
-                data: dragData,
-                dragAnchorStrategy: pointerDragAnchorStrategy,
-                feedback: Material(
-                  color: Colors.transparent,
-                  child: Transform.translate(
-                    offset: Offset(
-                      -dragData.totalWidth / 2,
-                      -dragData.totalHeight / 2 - DragConstants.touchLift,
-                    ),
-                    child: BlockShapeWidget(
-                      shape: shape,
-                      cellSize: DragConstants.cellSize,
-                      spacing: DragConstants.cellSpacing,
-                    ),
+            child: Draggable<DragBlockData>(
+              data: dragData,
+              dragAnchorStrategy: pointerDragAnchorStrategy,
+              feedback: Material(
+                color: Colors.transparent,
+                child: Transform.translate(
+                  offset: Offset(
+                    -dragData.totalWidth / 2,
+                    -dragData.totalHeight / 2 - DragConstants.touchLift,
+                  ),
+                  child: BlockShapeWidget(
+                    shape: shape,
+                    cellSize: DragConstants.cellSize,
+                    spacing: DragConstants.cellSpacing,
                   ),
                 ),
-                childWhenDragging: Opacity(
+              ),
+              childWhenDragging: Container(
+                width: 100,
+                height: 100,
+                color: Colors.transparent,
+                alignment: Alignment.center,
+                child: Opacity(
                   opacity: 0.2,
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
@@ -61,6 +65,13 @@ class HandTrayWidget extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
+              // Entire 100x100 area captures touch events with transparent background
+              child: Container(
+                width: 100,
+                height: 100,
+                color: Colors.transparent,
+                alignment: Alignment.center,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: BlockShapeWidget(
