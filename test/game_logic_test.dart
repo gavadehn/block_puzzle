@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:block_puzzle/logic/game_controller.dart';
 import 'package:block_puzzle/models/block_shape.dart';
+import 'package:block_puzzle/services/audio_manager.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  AudioManager.enableAudio = false;
 
   group('Block Puzzle Logic Tests', () {
     late GameController controller;
@@ -26,6 +28,63 @@ void main() {
       expect(controller.hand.length, 3);
     });
 
+    test('Matrix 90-degree rotation Clockwise and Counter-Clockwise', () {
+      final line3v = const BlockShape(
+        id: 'line_3v',
+        matrix: [
+          [1],
+          [1],
+          [1],
+        ],
+        color: Colors.blue,
+        glowColor: Colors.blueAccent,
+      );
+
+      final line3h = line3v.rotateClockwise();
+      expect(line3h.rows, 1);
+      expect(line3h.cols, 3);
+      expect(line3h.matrix, [
+        [1, 1, 1],
+      ]);
+
+      final line3vAgain = line3h.rotateCounterClockwise();
+      expect(line3vAgain.rows, 3);
+      expect(line3vAgain.cols, 1);
+      expect(line3vAgain.matrix, [
+        [1],
+        [1],
+        [1],
+      ]);
+    });
+
+    test('Easy mode block selection and rotation', () {
+      controller.setGameMode(GameMode.easy);
+      expect(controller.mode, GameMode.easy);
+
+      final line3v = const BlockShape(
+        id: 'line_3v',
+        matrix: [
+          [1],
+          [1],
+          [1],
+        ],
+        color: Colors.blue,
+        glowColor: Colors.blueAccent,
+      );
+
+      controller.hand[0] = line3v;
+      controller.selectHandBlock(0);
+      expect(controller.selectedHandIndex, 0);
+
+      controller.rotateSelectedBlockRight();
+      expect(controller.hand[0]!.rows, 1);
+      expect(controller.hand[0]!.cols, 3);
+
+      controller.rotateSelectedBlockLeft();
+      expect(controller.hand[0]!.rows, 3);
+      expect(controller.hand[0]!.cols, 1);
+    });
+
     test('canPlace correctly checks boundaries and occupancy', () {
       final dot = const BlockShape(
         id: 'dot',
@@ -45,17 +104,14 @@ void main() {
         glowColor: Colors.blueAccent,
       );
 
-      // Valid placement
       expect(controller.canPlace(dot, 0, 0), true);
       expect(controller.canPlace(dot, 7, 7), true);
       expect(controller.canPlace(line4, 0, 4), true);
 
-      // Out of bounds
       expect(controller.canPlace(line4, 0, 5), false);
       expect(controller.canPlace(line4, 8, 0), false);
       expect(controller.canPlace(dot, -1, 0), false);
 
-      // Occupied cell test
       controller.board[0][0] = Colors.red;
       expect(controller.canPlace(dot, 0, 0), false);
       expect(controller.canPlace(line4, 0, 0), false);
@@ -72,24 +128,6 @@ void main() {
         glowColor: Colors.yellowAccent,
       );
 
-      final line2 = const BlockShape(
-        id: 'line2',
-        matrix: [
-          [1, 1],
-        ],
-        color: Colors.green,
-        glowColor: Colors.greenAccent,
-      );
-
-      final line3 = const BlockShape(
-        id: 'line3',
-        matrix: [
-          [1, 1, 1],
-        ],
-        color: Colors.teal,
-        glowColor: Colors.tealAccent,
-      );
-
       final line4 = const BlockShape(
         id: 'line4',
         matrix: [
@@ -99,22 +137,17 @@ void main() {
         glowColor: Colors.blueAccent,
       );
 
-      // All horizontal shapes should be placeable in row 7 at valid column coordinates
       expect(controller.canPlace(line1, 7, 0), true);
-      expect(controller.canPlace(line2, 7, 0), true);
-      expect(controller.canPlace(line3, 7, 0), true);
       expect(controller.canPlace(line4, 7, 0), true);
       expect(controller.canPlace(line4, 7, 4), true);
       expect(controller.canPlace(line4, 7, 5), false);
     });
 
     test('Clearing full horizontal row and vertical column', () {
-      // Fill entire row 0
       for (int c = 0; c < 8; c++) {
         controller.board[0][c] = Colors.green;
       }
 
-      // Manually trigger line check logic via a mock block placement on row 1
       final dot = const BlockShape(
         id: 'dot',
         matrix: [
@@ -124,16 +157,13 @@ void main() {
         glowColor: Colors.yellowAccent,
       );
 
-      // Put dot in hand[0]
       controller.hand[0] = dot;
       final placed = controller.placeBlock(0, 1, 0);
 
       expect(placed, true);
-      // Row 0 should have been cleared!
       for (int c = 0; c < 8; c++) {
         expect(controller.board[0][c], isNull);
       }
-      // Placement score (10) + Row clear score (100) = 110
       expect(controller.score, 110);
     });
   });

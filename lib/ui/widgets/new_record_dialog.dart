@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../models/block_shape.dart';
 import '../../services/high_score_service.dart';
 
 class NewRecordDialog extends StatefulWidget {
   final int score;
+  final GameMode mode;
   final VoidCallback onSaved;
 
   const NewRecordDialog({
     super.key,
     required this.score,
+    required this.mode,
     required this.onSaved,
   });
 
@@ -43,7 +46,7 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
         ? 'Người chơi'
         : _nameController.text.trim();
 
-    await HighScoreService.instance.addScore(name, widget.score);
+    await HighScoreService.instance.addScore(name, widget.score, widget.mode);
     if (mounted) {
       Navigator.of(context).pop();
       widget.onSaved();
@@ -52,8 +55,9 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final rank = HighScoreService.instance.getRankForScore(widget.score);
+    final rank = HighScoreService.instance.getRankForScore(widget.score, widget.mode);
     final isTop1 = rank == 1;
+    final modeLabel = widget.mode.displayName;
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -91,9 +95,18 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: isTop1 ? const Color(0xFFFFD166) : const Color(0xFF06D6A0),
-                fontSize: 20,
+                fontSize: 19,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Chế độ $modeLabel',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),

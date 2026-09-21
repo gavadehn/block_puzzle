@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import '../../models/block_shape.dart';
 import 'leaderboard_dialog.dart';
 
 class GameOverOverlay extends StatelessWidget {
   final int score;
   final int highScore;
+  final GameMode mode;
   final VoidCallback onRestart;
 
   const GameOverOverlay({
     super.key,
     required this.score,
     required this.highScore,
+    required this.mode,
     required this.onRestart,
   });
 
   void _showLeaderboard(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => const LeaderboardDialog(),
+      builder: (_) => LeaderboardDialog(initialMode: mode),
     );
   }
 
@@ -57,7 +60,16 @@ class GameOverOverlay extends StatelessWidget {
                   letterSpacing: 1,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 4),
+              Text(
+                'Chế độ ${mode.displayName}',
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 14),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
@@ -122,9 +134,9 @@ class GameOverOverlay extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => _showLeaderboard(context),
                   icon: const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD166), size: 20),
-                  label: const Text(
-                    'XEM BẢNG VÀNG 🏆',
-                    style: TextStyle(
+                  label: Text(
+                    'BẢNG VÀNG (${mode.displayName.toUpperCase()}) 🏆',
+                    style: const TextStyle(
                       color: Color(0xFFFFD166),
                       fontSize: 14,
                       fontWeight: FontWeight.bold,

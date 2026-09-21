@@ -22,38 +22,49 @@ class ClearedLineInfo {
 class GameController extends ChangeNotifier {
   static const int boardSize = 8;
 
+  GameMode _mode = GameMode.hard;
   // 8x8 Board: null means empty cell, Color means occupied
   late List<List<Color?>> _board;
   // 3 slots for candidate shapes
   late List<BlockShape?> _hand;
 
+  int? _selectedHandIndex;
   int _score = 0;
   int _highScore = 0;
   int _comboStreak = 0;
   bool _isGameOver = false;
   bool _hasCelebratedRecord = false;
 
-  // Cells currently undergoing clearing animation
   final Set<String> _clearingCells = {};
+  final Random _random = Random();
 
   // Getters
+  GameMode get mode => _mode;
   List<List<Color?>> get board => _board;
   List<BlockShape?> get hand => _hand;
+  int? get selectedHandIndex => _selectedHandIndex;
   int get score => _score;
   int get highScore => _highScore;
   int get comboStreak => _comboStreak;
   bool get isGameOver => _isGameOver;
   Set<String> get clearingCells => _clearingCells;
 
-  final Random _random = Random();
+  GameController({GameMode initialMode = GameMode.hard}) {
+    _mode = initialMode;
+    startNewGame();
+  }
 
-  GameController() {
+  void setGameMode(GameMode newMode) {
+    if (_mode == newMode) return;
+    _mode = newMode;
+    _selectedHandIndex = null;
     startNewGame();
   }
 
   void startNewGame() {
     _board = List.generate(boardSize, (_) => List.filled(boardSize, null));
     _hand = [null, null, null];
+    _selectedHandIndex = null;
     _score = 0;
     _comboStreak = 0;
     _isGameOver = false;
@@ -67,11 +78,47 @@ class GameController extends ChangeNotifier {
     for (int i = 0; i < 3; i++) {
       _hand[i] = _getRandomShape();
     }
+    _selectedHandIndex = null;
   }
 
   BlockShape _getRandomShape() {
     final list = ShapeCatalog.allShapes;
     return list[_random.nextInt(list.length)];
+  }
+
+  /// Selects a block in hand for rotation (only active in Easy mode)
+  void selectHandBlock(int? index) {
+    if (_mode != GameMode.easy) return;
+    if (index != null && (index < 0 || index >= 3 || _hand[index] == null)) {
+      _selectedHandIndex = null;
+    } else {
+      _selectedHandIndex = (_selectedHandIndex == index) ? null : index;
+    }
+    notifyListeners();
+  }
+
+  /// Rotates the currently selected block Counter-Clockwise (Left)
+  void rotateSelectedBlockLeft() {
+    if (_mode != GameMode.easy || _selectedHandIndex == null) return;
+    final shape = _hand[_selectedHandIndex!];
+    if (shape == null) return;
+
+    _hand[_selectedHandIndex!] = shape.rotateCounterClockwise();
+    AudioManager.instance.playDrop();
+    _checkGameOver();
+    notifyListeners();
+  }
+
+  /// Rotates the currently selected block Clockwise (Right)
+  void rotateSelectedBlockRight() {
+    if (_mode != GameMode.easy || _selectedHandIndex == null) return;
+    final shape = _hand[_selectedHandIndex!];
+    if (shape == null) return;
+
+    _hand[_selectedHandIndex!] = shape.rotateClockwise();
+    AudioManager.instance.playDrop();
+    _checkGameOver();
+    notifyListeners();
   }
 
   /// Checks if a shape can be placed at (targetRow, targetCol)
@@ -94,16 +141,29 @@ class GameController extends ChangeNotifier {
     return true;
   }
 
-  /// Checks if a shape can fit anywhere on the current board
+  /// Checks if a shape can fit anywhere on current board (considering rotation if in Easy mode)
   bool canPlaceAnywhere(BlockShape shape) {
-    for (int r = 0; r <= boardSize - shape.rows; r++) {
-      for (int c = 0; c <= boardSize - shape.cols; c++) {
-        if (canPlace(shape, r, c)) {
-          return true;
+    if (_mode == GameMode.easy) {
+      // Check 4 orientations
+      BlockShape s = shape;
+      for (int rot = 0; rot < 4; rot++) {
+        for (int r = 0; r <= boardSize - s.rows; r++) {
+          for (int c = 0; c <= boardSize - s.cols; c++) {
+            if (canPlace(s, r, c)) return true;
+          }
+        }
+        s = s.rotateClockwise();
+      }
+      return false;
+    } else {
+      // Hard mode: exact orientation only
+      for (int r = 0; r <= boardSize - shape.rows; r++) {
+        for (int c = 0; c <= boardSize - shape.cols; c++) {
+          if (canPlace(shape, r, c)) return true;
         }
       }
+      return false;
     }
-    return false;
   }
 
   /// Places a block from hand slot [handIndex] to (targetRow, targetCol)
@@ -127,8 +187,11 @@ class GameController extends ChangeNotifier {
       }
     }
 
-    // 2. Consume shape from hand
+    // 2. Consume shape from hand and deselect
     _hand[handIndex] = null;
+    if (_selectedHandIndex == handIndex) {
+      _selectedHandIndex = null;
+    }
 
     // 3. Add placement points (10 points per tile)
     _score += shape.tileCount * 10;
@@ -138,15 +201,13 @@ class GameController extends ChangeNotifier {
     if (clearInfo.hasClear) {
       _score += clearInfo.pointsEarned;
       _comboStreak++;
-      // Play line clear audio
       AudioManager.instance.playClear();
     } else {
       _comboStreak = 0;
-      // Play block drop audio
       AudioManager.instance.playDrop();
     }
 
-    // 5. Update High Score and trigger new record fanfare
+    // 5. Update High Score and trigger record celebration
     if (_score > _highScore) {
       _highScore = _score;
       if (prevHighScore > 0 && !_hasCelebratedRecord) {
@@ -199,14 +260,12 @@ class GameController extends ChangeNotifier {
     int pointsEarned = 0;
 
     if (linesCleared > 0) {
-      // Clear rows
       for (int r in fullRows) {
         for (int c = 0; c < boardSize; c++) {
           _board[r][c] = null;
         }
       }
 
-      // Clear columns
       for (int c in fullCols) {
         for (int r = 0; r < boardSize; r++) {
           _board[r][c] = null;

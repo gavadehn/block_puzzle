@@ -9,6 +9,9 @@ class AudioManager extends ChangeNotifier {
 
   AudioManager._internal();
 
+  /// Flag to disable audio calls in unit test environments
+  static bool enableAudio = true;
+
   AudioPlayer? _bgmPlayer;
   AudioPlayer? _sfxDropPlayer;
   AudioPlayer? _sfxClearPlayer;
@@ -34,7 +37,7 @@ class AudioManager extends ChangeNotifier {
   bool get isSoundEnabled => _isSoundEnabled;
 
   void _ensureInitialized() {
-    if (_initialized) return;
+    if (!enableAudio || _initialized) return;
     _initialized = true;
 
     try {
@@ -49,9 +52,9 @@ class AudioManager extends ChangeNotifier {
         }
       });
 
-      _sfxDropPlayer?.setReleaseMode(ReleaseMode.stop);
-      _sfxClearPlayer?.setReleaseMode(ReleaseMode.stop);
-      _sfxRecordPlayer?.setReleaseMode(ReleaseMode.stop);
+      _sfxDropPlayer?.setReleaseMode(ReleaseMode.stop).catchError((_) {});
+      _sfxClearPlayer?.setReleaseMode(ReleaseMode.stop).catchError((_) {});
+      _sfxRecordPlayer?.setReleaseMode(ReleaseMode.stop).catchError((_) {});
     } catch (e) {
       debugPrint('AudioManager init warning: $e');
     }
@@ -59,14 +62,14 @@ class AudioManager extends ChangeNotifier {
 
   /// Starts background music playback if not already playing
   Future<void> startBgm() async {
-    if (!_isMusicEnabled || _isBgmStarted) return;
+    if (!enableAudio || !_isMusicEnabled || _isBgmStarted) return;
     _isBgmStarted = true;
     await playNextRandomBgm();
   }
 
   /// Picks a random track from the 5 BGM tracks and plays it
   Future<void> playNextRandomBgm() async {
-    if (!_isMusicEnabled) return;
+    if (!enableAudio || !_isMusicEnabled) return;
     _ensureInitialized();
 
     try {
@@ -81,8 +84,8 @@ class AudioManager extends ChangeNotifier {
       _lastBgmIndex = nextIndex;
 
       final track = bgmPlaylist[nextIndex];
-      await _bgmPlayer?.setVolume(0.4);
-      await _bgmPlayer?.play(AssetSource(track));
+      await _bgmPlayer?.setVolume(0.4).catchError((_) {});
+      await _bgmPlayer?.play(AssetSource(track)).catchError((_) {});
     } catch (e) {
       debugPrint('AudioManager startBgm error: $e');
     }
@@ -95,7 +98,7 @@ class AudioManager extends ChangeNotifier {
       _isBgmStarted = true;
       playNextRandomBgm();
     } else {
-      _bgmPlayer?.pause();
+      _bgmPlayer?.pause().catchError((_) {});
     }
     notifyListeners();
   }
@@ -108,12 +111,12 @@ class AudioManager extends ChangeNotifier {
 
   /// Play block placement sound (drop.wav)
   void playDrop() {
-    if (!_isSoundEnabled) return;
+    if (!enableAudio || !_isSoundEnabled) return;
     _ensureInitialized();
     try {
-      _sfxDropPlayer?.stop();
-      _sfxDropPlayer?.setVolume(0.85);
-      _sfxDropPlayer?.play(AssetSource('sound/drop.wav'));
+      _sfxDropPlayer?.stop().catchError((_) {});
+      _sfxDropPlayer?.setVolume(0.85).catchError((_) {});
+      _sfxDropPlayer?.play(AssetSource('sound/drop.wav')).catchError((_) {});
     } catch (e) {
       debugPrint('AudioManager playDrop error: $e');
     }
@@ -121,12 +124,12 @@ class AudioManager extends ChangeNotifier {
 
   /// Play line clear sound (clear.wav)
   void playClear() {
-    if (!_isSoundEnabled) return;
+    if (!enableAudio || !_isSoundEnabled) return;
     _ensureInitialized();
     try {
-      _sfxClearPlayer?.stop();
-      _sfxClearPlayer?.setVolume(1.0);
-      _sfxClearPlayer?.play(AssetSource('sound/clear.wav'));
+      _sfxClearPlayer?.stop().catchError((_) {});
+      _sfxClearPlayer?.setVolume(1.0).catchError((_) {});
+      _sfxClearPlayer?.play(AssetSource('sound/clear.wav')).catchError((_) {});
     } catch (e) {
       debugPrint('AudioManager playClear error: $e');
     }
@@ -134,12 +137,12 @@ class AudioManager extends ChangeNotifier {
 
   /// Play new high score record fanfare (newrecord.mp3)
   void playNewRecord() {
-    if (!_isSoundEnabled) return;
+    if (!enableAudio || !_isSoundEnabled) return;
     _ensureInitialized();
     try {
-      _sfxRecordPlayer?.stop();
-      _sfxRecordPlayer?.setVolume(1.0);
-      _sfxRecordPlayer?.play(AssetSource('soundtrack/newrecord.mp3'));
+      _sfxRecordPlayer?.stop().catchError((_) {});
+      _sfxRecordPlayer?.setVolume(1.0).catchError((_) {});
+      _sfxRecordPlayer?.play(AssetSource('soundtrack/newrecord.mp3')).catchError((_) {});
     } catch (e) {
       debugPrint('AudioManager playNewRecord error: $e');
     }
@@ -147,10 +150,10 @@ class AudioManager extends ChangeNotifier {
 
   @override
   void dispose() {
-    _bgmPlayer?.dispose();
-    _sfxDropPlayer?.dispose();
-    _sfxClearPlayer?.dispose();
-    _sfxRecordPlayer?.dispose();
+    _bgmPlayer?.dispose().catchError((_) {});
+    _sfxDropPlayer?.dispose().catchError((_) {});
+    _sfxClearPlayer?.dispose().catchError((_) {});
+    _sfxRecordPlayer?.dispose().catchError((_) {});
     super.dispose();
   }
 }

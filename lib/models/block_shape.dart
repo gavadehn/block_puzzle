@@ -1,5 +1,16 @@
 import 'package:flutter/material.dart';
 
+enum GameMode {
+  hard, // Chế độ khó: Cổ điển, không xoay
+  easy, // Chế độ dễ: Cho phép xoay hình
+}
+
+extension GameModeExtension on GameMode {
+  String get displayName => this == GameMode.hard ? 'Khó' : 'Dễ';
+  String get description => this == GameMode.hard ? 'Cố định không xoay' : 'Cho phép xoay hình';
+  String get storageKey => this == GameMode.hard ? 'top_10_high_scores_hard' : 'top_10_high_scores_easy';
+}
+
 class BlockShape {
   final String id;
   final List<List<int>> matrix;
@@ -24,6 +35,40 @@ class BlockShape {
       }
     }
     return count;
+  }
+
+  /// Rotates the shape matrix 90 degrees Clockwise
+  BlockShape rotateClockwise() {
+    final r = rows;
+    final c = cols;
+    final newMatrix = List.generate(c, (newR) {
+      return List.generate(r, (newC) {
+        return matrix[r - 1 - newC][newR];
+      });
+    });
+    return BlockShape(
+      id: '${id}_cw',
+      matrix: newMatrix,
+      color: color,
+      glowColor: glowColor,
+    );
+  }
+
+  /// Rotates the shape matrix 90 degrees Counter-Clockwise
+  BlockShape rotateCounterClockwise() {
+    final r = rows;
+    final c = cols;
+    final newMatrix = List.generate(c, (newR) {
+      return List.generate(r, (newC) {
+        return matrix[newC][c - 1 - newR];
+      });
+    });
+    return BlockShape(
+      id: '${id}_ccw',
+      matrix: newMatrix,
+      color: color,
+      glowColor: glowColor,
+    );
   }
 }
 
@@ -75,7 +120,7 @@ class ShapeCatalog {
       color: Color(0xFF118AB2),
       glowColor: Color(0xFF56CCF2),
     ),
-    // 4x1 & 1x4 (Thanh 4 ô ngang & dọc)
+    // 4x1 & 1x4
     BlockShape(
       id: 'line_4x1_h',
       matrix: [
@@ -126,7 +171,7 @@ class ShapeCatalog {
       color: Color(0xFFEF476F),
       glowColor: Color(0xFFFF758F),
     ),
-    // 3x3 Square (rare)
+    // 3x3 Square
     BlockShape(
       id: 'square_3x3',
       matrix: [
@@ -174,7 +219,7 @@ class ShapeCatalog {
       color: Color(0xFFF77F00),
       glowColor: Color(0xFFFCBF49),
     ),
-    // 3x2 & 2x3 Classic L-shapes (4 ô - Tetris L & J shapes)
+    // 3x2 & 2x3 Classic L-shapes (4 ô)
     BlockShape(
       id: 'l_3x2_down_right',
       matrix: [

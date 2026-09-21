@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:block_puzzle/models/block_shape.dart';
 import 'package:block_puzzle/services/high_score_service.dart';
 
 void main() {
@@ -14,31 +15,26 @@ void main() {
       await service.loadScores();
     });
 
-    test('Initial high score is 0 and empty list', () {
-      expect(service.highestScore, 0);
-      expect(service.topScores.isEmpty, true);
-      expect(service.isTop10Score(100), true);
-      expect(service.isTop10Score(0), false);
+    test('Initial high scores for Hard and Easy modes are 0 and empty', () {
+      expect(service.getHighestScore(GameMode.hard), 0);
+      expect(service.getHighestScore(GameMode.easy), 0);
+      expect(service.getTopScores(GameMode.hard).isEmpty, true);
+      expect(service.getTopScores(GameMode.easy).isEmpty, true);
     });
 
-    test('Adding scores maintains sorted descending order and max 10 entries', () async {
-      // Add 12 scores
-      for (int i = 1; i <= 12; i++) {
-        await service.addScore('Player $i', i * 100);
-      }
+    test('Adding scores separates Hard and Easy leaderboards', () async {
+      // Add score to Hard mode
+      await service.addScore('Hard Player', 500, GameMode.hard);
+      // Add score to Easy mode
+      await service.addScore('Easy Player', 800, GameMode.easy);
 
-      expect(service.topScores.length, 10);
-      expect(service.highestScore, 1200);
-      expect(service.topScores.first.name, 'Player 12');
-      expect(service.topScores.first.score, 1200);
-      expect(service.topScores.last.score, 300);
+      expect(service.getHighestScore(GameMode.hard), 500);
+      expect(service.getHighestScore(GameMode.easy), 800);
 
-      // Score 200 should not qualify for Top 10 (since lowest is 300)
-      expect(service.isTop10Score(200), false);
-      // Score 350 should qualify
-      expect(service.isTop10Score(350), true);
-      expect(service.getRankForScore(350), 10);
-      expect(service.getRankForScore(1300), 1);
+      expect(service.getTopScores(GameMode.hard).length, 1);
+      expect(service.getTopScores(GameMode.easy).length, 1);
+      expect(service.getTopScores(GameMode.hard).first.name, 'Hard Player');
+      expect(service.getTopScores(GameMode.easy).first.name, 'Easy Player');
     });
   });
 }

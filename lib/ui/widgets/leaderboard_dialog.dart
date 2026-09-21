@@ -1,22 +1,52 @@
 import 'package:flutter/material.dart';
+import '../../models/block_shape.dart';
 import '../../models/high_score_entry.dart';
 import '../../services/high_score_service.dart';
 
-class LeaderboardDialog extends StatelessWidget {
-  const LeaderboardDialog({super.key});
+class LeaderboardDialog extends StatefulWidget {
+  final GameMode initialMode;
+
+  const LeaderboardDialog({
+    super.key,
+    this.initialMode = GameMode.hard,
+  });
+
+  @override
+  State<LeaderboardDialog> createState() => _LeaderboardDialogState();
+}
+
+class _LeaderboardDialogState extends State<LeaderboardDialog> with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialMode == GameMode.hard ? 0 : 1,
+    );
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: HighScoreService.instance,
       builder: (context, _) {
-        final scores = HighScoreService.instance.topScores;
+        final hardScores = HighScoreService.instance.hardScores;
+        final easyScores = HighScoreService.instance.easyScores;
 
         return Dialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 440, maxHeight: 600),
+            constraints: const BoxConstraints(maxWidth: 440, maxHeight: 620),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: const Color(0xFF161C28),
@@ -69,44 +99,46 @@ class LeaderboardDialog extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
-                // Top 10 List or Empty State
-                Expanded(
-                  child: scores.isEmpty
-                      ? const Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.military_tech_rounded,
-                                size: 56,
-                                color: Colors.white24,
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                'Chưa có kỷ lục nào!\nHãy chơi và ghi tên vào bảng vàng!',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white54,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: scores.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final entry = scores[index];
-                            final rank = index + 1;
-                            return _buildRankItem(rank, entry);
-                          },
-                        ),
+                // Dual Tab Selector (Khó vs Dễ)
+                Container(
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10141D),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicator: BoxDecoration(
+                      color: const Color(0xFF1E2536),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFF333E5A)),
+                    ),
+                    dividerColor: Colors.transparent,
+                    labelColor: const Color(0xFFFFD166),
+                    unselectedLabelColor: Colors.white60,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    tabs: const [
+                      Tab(text: '🔥 CHẾ ĐỘ KHÓ'),
+                      Tab(text: '✨ CHẾ ĐỘ DỄ'),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
+
+                // Tab Views
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildScoreList(hardScores, 'Chưa có kỷ lục Chế độ Khó!\nHãy chơi và ghi danh vào bảng vàng!'),
+                      _buildScoreList(easyScores, 'Chưa có kỷ lục Chế độ Dễ!\nHãy chơi và ghi danh vào bảng vàng!'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
 
                 // Close Button
                 SizedBox(
@@ -135,6 +167,43 @@ class LeaderboardDialog extends StatelessWidget {
             ),
           ),
         );
+      },
+    );
+  }
+
+  Widget _buildScoreList(List<HighScoreEntry> scores, String emptyText) {
+    if (scores.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.military_tech_rounded,
+              size: 52,
+              color: Colors.white24,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              emptyText,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      shrinkWrap: true,
+      itemCount: scores.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final entry = scores[index];
+        final rank = index + 1;
+        return _buildRankItem(rank, entry);
       },
     );
   }
