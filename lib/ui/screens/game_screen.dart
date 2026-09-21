@@ -1,10 +1,14 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../logic/game_controller.dart';
 import '../../services/audio_manager.dart';
+import '../../services/high_score_service.dart';
 import '../widgets/game_board.dart';
 import '../widgets/hand_tray.dart';
 import '../widgets/score_board.dart';
 import '../widgets/game_over_dialog.dart';
+import '../widgets/new_record_dialog.dart';
+import '../widgets/leaderboard_dialog.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -15,18 +19,54 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   late final GameController _controller;
+  bool _hasPromptedRecord = false;
 
   @override
   void initState() {
     super.initState();
     _controller = GameController();
+    _controller.addListener(_onGameStateChanged);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AudioManager.instance.startBgm();
     });
   }
 
+  void _onGameStateChanged() {
+    if (_controller.isGameOver && !_hasPromptedRecord) {
+      final score = _controller.score;
+      if (HighScoreService.instance.isTop10Score(score)) {
+        _hasPromptedRecord = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _promptNewRecord(score);
+        });
+      }
+    } else if (!_controller.isGameOver) {
+      _hasPromptedRecord = false;
+    }
+  }
+
+  void _promptNewRecord(int score) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => NewRecordDialog(
+        score: score,
+        onSaved: () {
+          if (!mounted) return;
+          showDialog(
+            context: context,
+            builder: (_) => const LeaderboardDialog(),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   void dispose() {
+    _controller.removeListener(_onGameStateChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -41,8 +81,10 @@ class _GameScreenState extends State<GameScreen> {
         backgroundColor: const Color(0xFF0D111A),
         body: SafeArea(
           child: AnimatedBuilder(
-            animation: _controller,
+            animation: Listenable.merge([_controller, HighScoreService.instance]),
             builder: (context, _) {
+              final bestScore = max(_controller.highScore, HighScoreService.instance.highestScore);
+
               return Stack(
                 children: [
                   Center(
@@ -50,10 +92,10 @@ class _GameScreenState extends State<GameScreen> {
                       constraints: const BoxConstraints(maxWidth: 500),
                       child: Column(
                         children: [
-                          // 1. Header & Scoreboard with Mute/Unmute buttons
+                          // 1. Header & Scoreboard with Mute/Unmute and Leaderboard buttons
                           ScoreBoardWidget(
                             score: _controller.score,
-                            highScore: _controller.highScore,
+                            highScore: bestScore,
                             combo: _controller.comboStreak,
                             onRestart: () {
                               _controller.startNewGame();
@@ -83,7 +125,7 @@ class _GameScreenState extends State<GameScreen> {
                   if (_controller.isGameOver)
                     GameOverOverlay(
                       score: _controller.score,
-                      highScore: _controller.highScore,
+                      highScore: bestScore,
                       onRestart: () {
                         _controller.startNewGame();
                       },
