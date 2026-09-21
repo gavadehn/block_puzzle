@@ -182,31 +182,35 @@ class ScoreBoardWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Miki Mascot Avatar
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF19202E),
-                  border: Border.all(
-                    color: const Color(0xFFFFD166).withAlpha(180),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFFD166).withAlpha(70),
-                      blurRadius: 10,
-                      spreadRadius: 1,
+              Tooltip(
+                message: 'Miki Mascot',
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF19202E),
+                    border: Border.all(
+                      color: const Color(0xFFFFD166),
+                      width: 2.2,
                     ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/image/miki.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.pets_rounded,
-                      color: Color(0xFFFFD166),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFD166).withAlpha(80),
+                        blurRadius: 12,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/image/miki.png',
+                      fit: BoxFit.cover,
+                      alignment: const Alignment(0.0, -0.85),
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.pets_rounded,
+                        color: Color(0xFFFFD166),
+                      ),
                     ),
                   ),
                 ),
