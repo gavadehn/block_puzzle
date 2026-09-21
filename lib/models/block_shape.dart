@@ -75,7 +75,7 @@ class ShapeCatalog {
       color: Color(0xFF118AB2),
       glowColor: Color(0xFF56CCF2),
     ),
-    // 4x1 & 1x4
+    // 4x1 & 1x4 (Thanh 4 ô ngang & dọc)
     BlockShape(
       id: 'line_4x1_h',
       matrix: [
@@ -137,7 +137,7 @@ class ShapeCatalog {
       color: Color(0xFFD90429),
       glowColor: Color(0xFFFF4D6D),
     ),
-    // 2x2 Small Ls (Corner shapes)
+    // 2x2 Small Ls (Corner shapes - 3 ô)
     BlockShape(
       id: 'corner_2x2_1',
       matrix: [
@@ -174,7 +174,84 @@ class ShapeCatalog {
       color: Color(0xFFF77F00),
       glowColor: Color(0xFFFCBF49),
     ),
-    // 3x3 Large Ls
+    // 3x2 & 2x3 Classic L-shapes (4 ô - Tetris L & J shapes)
+    BlockShape(
+      id: 'l_3x2_down_right',
+      matrix: [
+        [1, 0],
+        [1, 0],
+        [1, 1],
+      ],
+      color: Color(0xFFFF9E00),
+      glowColor: Color(0xFFFFD000),
+    ),
+    BlockShape(
+      id: 'l_3x2_down_left',
+      matrix: [
+        [0, 1],
+        [0, 1],
+        [1, 1],
+      ],
+      color: Color(0xFFFF9E00),
+      glowColor: Color(0xFFFFD000),
+    ),
+    BlockShape(
+      id: 'l_3x2_up_right',
+      matrix: [
+        [1, 1],
+        [1, 0],
+        [1, 0],
+      ],
+      color: Color(0xFFFF9E00),
+      glowColor: Color(0xFFFFD000),
+    ),
+    BlockShape(
+      id: 'l_3x2_up_left',
+      matrix: [
+        [1, 1],
+        [0, 1],
+        [0, 1],
+      ],
+      color: Color(0xFFFF9E00),
+      glowColor: Color(0xFFFFD000),
+    ),
+    BlockShape(
+      id: 'l_2x3_top_right',
+      matrix: [
+        [1, 1, 1],
+        [1, 0, 0],
+      ],
+      color: Color(0xFFFF6B6B),
+      glowColor: Color(0xFFFF8E8E),
+    ),
+    BlockShape(
+      id: 'l_2x3_top_left',
+      matrix: [
+        [1, 1, 1],
+        [0, 0, 1],
+      ],
+      color: Color(0xFFFF6B6B),
+      glowColor: Color(0xFFFF8E8E),
+    ),
+    BlockShape(
+      id: 'l_2x3_bottom_right',
+      matrix: [
+        [1, 0, 0],
+        [1, 1, 1],
+      ],
+      color: Color(0xFFFF6B6B),
+      glowColor: Color(0xFFFF8E8E),
+    ),
+    BlockShape(
+      id: 'l_2x3_bottom_left',
+      matrix: [
+        [0, 0, 1],
+        [1, 1, 1],
+      ],
+      color: Color(0xFFFF6B6B),
+      glowColor: Color(0xFFFF8E8E),
+    ),
+    // 3x3 Large Ls (5 ô)
     BlockShape(
       id: 'corner_3x3_1',
       matrix: [
