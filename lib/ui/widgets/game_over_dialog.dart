@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/block_shape.dart';
 import '../../services/audio_manager.dart';
+import '../../services/locale_service.dart';
 import 'leaderboard_dialog.dart';
 
 class GameOverOverlay extends StatefulWidget {
@@ -42,7 +43,9 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = LocaleService.instance;
     final isNewRecord = widget.score >= widget.highScore && widget.score > 0;
+    final modeName = widget.mode == GameMode.hard ? loc.tr('hard') : loc.tr('easy');
 
     return Container(
       color: Colors.black.withAlpha(200),
@@ -69,17 +72,18 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                isNewRecord ? '🏆 KỶ LỤC MỚI! 🏆' : 'HẾT LƯỢT ĐI',
+                isNewRecord ? loc.tr('champion_record') : loc.tr('game_over'),
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isNewRecord ? const Color(0xFFFFD166) : Colors.white,
-                  fontSize: 22,
+                  fontSize: 21,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Chế độ ${widget.mode.displayName}',
+                '${loc.tr('mode')} $modeName',
                 style: const TextStyle(
                   color: Colors.white60,
                   fontSize: 13,
@@ -95,9 +99,9 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      'ĐIỂM TRẬN NÀY',
-                      style: TextStyle(
+                    Text(
+                      loc.tr('this_game_score'),
+                      style: const TextStyle(
                         color: Colors.white54,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -124,9 +128,9 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
                 child: ElevatedButton.icon(
                   onPressed: widget.onRestart,
                   icon: const Icon(Icons.replay_rounded, size: 22),
-                  label: const Text(
-                    'CHƠI LẠI',
-                    style: TextStyle(
+                  label: Text(
+                    loc.tr('play_again'),
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
@@ -152,7 +156,7 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
                   onPressed: () => _showLeaderboard(context),
                   icon: const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD166), size: 20),
                   label: Text(
-                    'BẢNG VÀNG (${widget.mode.displayName.toUpperCase()}) 🏆',
+                    loc.tr('view_leaderboard_mode', {'mode': modeName.toUpperCase()}),
                     style: const TextStyle(
                       color: Color(0xFFFFD166),
                       fontSize: 14,

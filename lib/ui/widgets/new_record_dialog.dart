@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/block_shape.dart';
 import '../../services/audio_manager.dart';
 import '../../services/high_score_service.dart';
+import '../../services/locale_service.dart';
 
 class NewRecordDialog extends StatefulWidget {
   final int score;
@@ -46,8 +47,9 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
     if (_isSaving) return;
     setState(() => _isSaving = true);
 
+    final defaultName = LocaleService.instance.tr('default_player');
     final name = _nameController.text.trim().isEmpty
-        ? 'Người chơi'
+        ? defaultName
         : _nameController.text.trim();
 
     await HighScoreService.instance.addScore(name, widget.score, widget.mode);
@@ -59,9 +61,10 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = LocaleService.instance;
     final rank = HighScoreService.instance.getRankForScore(widget.score, widget.mode);
     final isTop1 = rank == 1;
-    final modeLabel = widget.mode.displayName;
+    final modeName = widget.mode == GameMode.hard ? loc.tr('hard') : loc.tr('easy');
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -95,7 +98,7 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
             ),
             const SizedBox(height: 8),
             Text(
-              isTop1 ? '🏆 KỶ LỤC MỚI VÔ ĐỊCH! 🏆' : '🎉 LỌT TOP 10 KỶ LỤC! 🎉',
+              isTop1 ? loc.tr('champion_record') : loc.tr('top_10_record'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: isTop1 ? const Color(0xFFFFD166) : const Color(0xFF06D6A0),
@@ -106,7 +109,7 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Chế độ $modeLabel',
+              '${loc.tr('mode')} $modeName',
               style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 13,
@@ -125,7 +128,7 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'XẾP HẠNG #$rank',
+                    '${loc.tr('rank')} #$rank',
                     style: const TextStyle(
                       color: Color(0xFFFFD166),
                       fontSize: 14,
@@ -135,7 +138,7 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '${widget.score} ĐIỂM',
+                    '${widget.score} ${loc.tr('pts')}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -148,11 +151,11 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
             const SizedBox(height: 20),
 
             // Name Input Field
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Tên người chơi:',
-                style: TextStyle(
+                loc.tr('player_name'),
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -171,7 +174,7 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
                 fontWeight: FontWeight.bold,
               ),
               decoration: InputDecoration(
-                hintText: 'Nhập tên của bạn...',
+                hintText: loc.tr('enter_name_hint'),
                 hintStyle: const TextStyle(color: Colors.white38),
                 filled: true,
                 fillColor: const Color(0xFF10141D),
@@ -207,7 +210,7 @@ class _NewRecordDialogState extends State<NewRecordDialog> {
                       )
                     : const Icon(Icons.check_circle_rounded, size: 22),
                 label: Text(
-                  _isSaving ? 'ĐANG LƯU...' : 'LƯU VÀO BẢNG VÀNG',
+                  _isSaving ? loc.tr('saving') : loc.tr('save_to_leaderboard'),
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,

@@ -1,13 +1,16 @@
 import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AudioManager extends ChangeNotifier {
   static final AudioManager instance = AudioManager._internal();
 
   factory AudioManager() => instance;
 
-  AudioManager._internal();
+  AudioManager._internal() {
+    loadAudioSettings();
+  }
 
   /// Flag to disable audio calls in unit test environments
   static bool enableAudio = true;
@@ -18,6 +21,9 @@ class AudioManager extends ChangeNotifier {
   AudioPlayer? _sfxRecordPlayer;
   bool _initialized = false;
   int _bgmPlayToken = 0;
+
+  static const String _prefEnabledBgmKey = 'enabled_bgm_tracks';
+  Set<int> _enabledTrackIndices = {0, 1, 2, 3, 4};
 
   // Playlist of 5 background tracks
   static const List<String> bgmPlaylist = [
@@ -35,6 +41,55 @@ class AudioManager extends ChangeNotifier {
 
   bool get isMusicEnabled => _isMusicEnabled;
   bool get isSoundEnabled => _isSoundEnabled;
+  Set<int> get enabledTrackIndices => Set.unmodifiable(_enabledTrackIndices);
+
+  bool isTrackEnabled(int index) => _enabledTrackIndices.contains(index);
+
+  Future<void> loadAudioSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getStringList(_prefEnabledBgmKey);
+      if (saved != null && saved.isNotEmpty) {
+        final parsed = saved
+            .map((s) => int.tryParse(s))
+            .whereType<int>()
+            .where((i) => i >= 0 && i < bgmPlaylist.length)
+            .toSet();
+        if (parsed.isNotEmpty) {
+          _enabledTrackIndices = parsed;
+        }
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('AudioManager loadAudioSettings error: $e');
+    }
+  }
+
+  Future<void> toggleTrack(int index, bool enabled) async {
+    if (index < 0 || index >= bgmPlaylist.length) return;
+    if (enabled) {
+      _enabledTrackIndices.add(index);
+    } else {
+      _enabledTrackIndices.remove(index);
+    }
+    notifyListeners();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        _prefEnabledBgmKey,
+        _enabledTrackIndices.map((i) => i.toString()).toList(),
+      );
+    } catch (e) {
+      debugPrint('AudioManager saveAudioSettings error: $e');
+    }
+
+    if (_enabledTrackIndices.isEmpty) {
+      _bgmPlayer?.pause().catchError((_) {});
+    } else if (!_enabledTrackIndices.contains(_lastBgmIndex) && _isMusicEnabled) {
+      playNextRandomBgm();
+    }
+  }
 
   void _ensureInitialized() {
     if (!enableAudio || _initialized) return;
@@ -153,20 +208,30 @@ class AudioManager extends ChangeNotifier {
     await ensureBgmPlaying();
   }
 
-  /// Picks a random track from the 5 BGM tracks and plays it
+  /// Picks a random track from the enabled BGM tracks and plays it
   Future<void> playNextRandomBgm() async {
     if (!enableAudio || !_isMusicEnabled) return;
     _ensureInitialized();
 
+    final validIndices = _enabledTrackIndices
+        .where((i) => i >= 0 && i < bgmPlaylist.length)
+        .toList();
+
+    if (validIndices.isEmpty) {
+      await _bgmPlayer?.stop().catchError((_) {});
+      return;
+    }
+
     try {
       _bgmPlayToken++;
       int nextIndex;
-      if (bgmPlaylist.length > 1) {
-        do {
-          nextIndex = _random.nextInt(bgmPlaylist.length);
-        } while (nextIndex == _lastBgmIndex);
+      if (validIndices.length > 1) {
+        final candidates = validIndices.where((i) => i != _lastBgmIndex).toList();
+        nextIndex = candidates.isNotEmpty
+            ? candidates[_random.nextInt(candidates.length)]
+            : validIndices[_random.nextInt(validIndices.length)];
       } else {
-        nextIndex = 0;
+        nextIndex = validIndices.first;
       }
       _lastBgmIndex = nextIndex;
 

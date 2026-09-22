@@ -4,6 +4,7 @@ import '../../logic/game_controller.dart';
 import '../../models/block_shape.dart';
 import '../../services/audio_manager.dart';
 import '../../services/high_score_service.dart';
+import '../../services/locale_service.dart';
 import '../widgets/game_board.dart';
 import '../widgets/hand_tray.dart';
 import '../widgets/score_board.dart';
@@ -69,8 +70,12 @@ class _GameScreenState extends State<GameScreen> {
 
   void _handleModeChange(GameMode newMode) {
     if (_controller.mode == newMode) return;
+    final loc = LocaleService.instance;
+
     if (_controller.score > 0 && !_controller.isGameOver) {
-      // Prompt confirmation before switching mode if game is active
+      final newModeName = newMode == GameMode.hard ? loc.tr('hard') : loc.tr('easy');
+      final newModeDesc = newMode == GameMode.hard ? loc.tr('mode_hard_desc') : loc.tr('mode_easy_desc');
+
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -79,18 +84,18 @@ class _GameScreenState extends State<GameScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: Color(0xFF333E5A)),
           ),
-          title: const Text(
-            'Đổi chế độ chơi?',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          title: Text(
+            loc.tr('change_mode_title'),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           content: Text(
-            'Chuyển sang Chế độ ${newMode.displayName} (${newMode.description}) sẽ bắt đầu một ván chơi mới. Bạn có chắc chắn?',
+            loc.tr('change_mode_content', {'mode': newModeName, 'desc': newModeDesc}),
             style: const TextStyle(color: Colors.white70),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('HỦY', style: TextStyle(color: Colors.white54)),
+              child: Text(loc.tr('cancel'), style: const TextStyle(color: Colors.white54)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -101,7 +106,7 @@ class _GameScreenState extends State<GameScreen> {
                 backgroundColor: const Color(0xFF06D6A0),
                 foregroundColor: const Color(0xFF0D1B2A),
               ),
-              child: const Text('ĐỒNG Ý', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(loc.tr('confirm'), style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -128,7 +133,7 @@ class _GameScreenState extends State<GameScreen> {
         backgroundColor: const Color(0xFF0D111A),
         body: SafeArea(
           child: AnimatedBuilder(
-            animation: Listenable.merge([_controller, HighScoreService.instance]),
+            animation: Listenable.merge([_controller, HighScoreService.instance, LocaleService.instance]),
             builder: (context, _) {
               final mode = _controller.mode;
               final bestScore = max(

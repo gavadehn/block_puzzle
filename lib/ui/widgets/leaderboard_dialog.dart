@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/block_shape.dart';
 import '../../models/high_score_entry.dart';
 import '../../services/high_score_service.dart';
+import '../../services/locale_service.dart';
 
 class LeaderboardDialog extends StatefulWidget {
   final GameMode initialMode;
@@ -37,8 +38,9 @@ class _LeaderboardDialogState extends State<LeaderboardDialog> with SingleTicker
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: HighScoreService.instance,
+      listenable: Listenable.merge([HighScoreService.instance, LocaleService.instance]),
       builder: (context, _) {
+        final loc = LocaleService.instance;
         final hardScores = HighScoreService.instance.hardScores;
         final easyScores = HighScoreService.instance.easyScores;
 
@@ -70,21 +72,21 @@ class _LeaderboardDialogState extends State<LeaderboardDialog> with SingleTicker
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.emoji_events_rounded,
                           color: Color(0xFFFFD166),
                           size: 28,
                         ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         Text(
-                          'BẢNG VÀNG KỶ LỤC',
-                          style: TextStyle(
+                          loc.tr('leaderboard_title'),
+                          style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
+                            fontSize: 17,
                             fontWeight: FontWeight.w900,
-                            letterSpacing: 1,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
@@ -120,9 +122,9 @@ class _LeaderboardDialogState extends State<LeaderboardDialog> with SingleTicker
                     labelColor: const Color(0xFFFFD166),
                     unselectedLabelColor: Colors.white60,
                     labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    tabs: const [
-                      Tab(text: '🔥 CHẾ ĐỘ KHÓ'),
-                      Tab(text: '✨ CHẾ ĐỘ DỄ'),
+                    tabs: [
+                      Tab(text: loc.tr('tab_hard').toUpperCase()),
+                      Tab(text: loc.tr('tab_easy').toUpperCase()),
                     ],
                   ),
                 ),
@@ -133,8 +135,8 @@ class _LeaderboardDialogState extends State<LeaderboardDialog> with SingleTicker
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildScoreList(hardScores, 'Chưa có kỷ lục Chế độ Khó!\nHãy chơi và ghi danh vào bảng vàng!'),
-                      _buildScoreList(easyScores, 'Chưa có kỷ lục Chế độ Dễ!\nHãy chơi và ghi danh vào bảng vàng!'),
+                      _buildScoreList(hardScores, loc.tr('no_records')),
+                      _buildScoreList(easyScores, loc.tr('no_records')),
                     ],
                   ),
                 ),
@@ -154,9 +156,9 @@ class _LeaderboardDialogState extends State<LeaderboardDialog> with SingleTicker
                         side: const BorderSide(color: Color(0xFF333E5A)),
                       ),
                     ),
-                    child: const Text(
-                      'ĐÓNG',
-                      style: TextStyle(
+                    child: Text(
+                      loc.tr('close'),
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1,
                       ),

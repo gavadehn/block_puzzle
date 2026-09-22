@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../models/block_shape.dart';
 import '../../services/audio_manager.dart';
 import '../../services/high_score_service.dart';
+import '../../services/locale_service.dart';
 import 'leaderboard_dialog.dart';
+import 'settings_dialog.dart';
 
 class ScoreBoardWidget extends StatelessWidget {
   final int score;
@@ -30,163 +32,175 @@ class ScoreBoardWidget extends StatelessWidget {
     );
   }
 
+  void _showSettings(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => const SettingsDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Column(
-        children: [
-          // Row 1: High Score + Mode Selector + Controls
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
+    return ListenableBuilder(
+      listenable: LocaleService.instance,
+      builder: (context, _) {
+        final loc = LocaleService.instance;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Column(
             children: [
-              // High Score Card (Clickable to open Leaderboard)
-              Flexible(
-                child: ListenableBuilder(
-                  listenable: HighScoreService.instance,
-                  builder: (context, _) {
-                    final bestScore = max(score, HighScoreService.instance.getHighestScore(mode));
-                    return InkWell(
-                      onTap: () => _showLeaderboard(context),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E2536),
+              // Row 1: High Score + Mode Selector + Controls
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // High Score Card with Trophy (Clickable to open Leaderboard)
+                  Flexible(
+                    child: ListenableBuilder(
+                      listenable: HighScoreService.instance,
+                      builder: (context, _) {
+                        final bestScore = max(score, HighScoreService.instance.getHighestScore(mode));
+                        return InkWell(
+                          onTap: () => _showLeaderboard(context),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF333E5A)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.emoji_events_rounded,
-                              color: Color(0xFFFFD166),
-                              size: 18,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E2536),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFF333E5A)),
                             ),
-                            const SizedBox(width: 5),
-                            Flexible(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'KỶ LỤC (${mode.displayName.toUpperCase()})',
-                                    style: const TextStyle(
-                                      color: Colors.white54,
-                                      fontSize: 8.5,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.emoji_events_rounded,
+                                  color: Color(0xFFFFD166),
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        loc.tr('high_score'),
+                                        style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.3,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        '$bestScore',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        maxLines: 1,
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    '$bestScore',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 1,
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 6),
-
-              // Mode Selector (🔥 Khó | ✨ Dễ)
-              Container(
-                padding: const EdgeInsets.all(2.5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10141D),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF2C3549)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildModeButton(
-                      title: 'Khó',
-                      icon: '🔥',
-                      isSelected: mode == GameMode.hard,
-                      onTap: () => onModeChanged(GameMode.hard),
+                          ),
+                        );
+                      },
                     ),
-                    _buildModeButton(
-                      title: 'Dễ',
-                      icon: '✨',
-                      isSelected: mode == GameMode.easy,
-                      onTap: () => onModeChanged(GameMode.easy),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 6),
+                  ),
+                  const SizedBox(width: 6),
 
-              // Action Buttons: Leaderboard, Audio, Restart
-              ListenableBuilder(
-                listenable: AudioManager.instance,
-                builder: (context, _) {
-                  final audio = AudioManager.instance;
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Leaderboard Button
-                      IconButton(
-                        onPressed: () => _showLeaderboard(context),
-                        icon: const Icon(Icons.leaderboard_rounded, size: 16),
-                        color: const Color(0xFFFFD166),
-                        tooltip: 'Bảng vàng kỷ lục',
-                        style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFF1E2536),
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(30, 30),
+                  // Mode Selector (🔥 Khó | ✨ Dễ)
+                  Container(
+                    padding: const EdgeInsets.all(2.5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10141D),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFF2C3549)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildModeButton(
+                          title: loc.tr('hard'),
+                          icon: '🔥',
+                          isSelected: mode == GameMode.hard,
+                          onTap: () => onModeChanged(GameMode.hard),
                         ),
-                      ),
-                      const SizedBox(width: 3),
-                      // Music Toggle Button
-                      IconButton(
-                        onPressed: () => audio.toggleMusic(),
-                        icon: Icon(
-                          audio.isMusicEnabled ? Icons.music_note_rounded : Icons.music_off_rounded,
-                          size: 16,
+                        _buildModeButton(
+                          title: loc.tr('easy'),
+                          icon: '✨',
+                          isSelected: mode == GameMode.easy,
+                          onTap: () => onModeChanged(GameMode.easy),
                         ),
-                        color: audio.isMusicEnabled ? const Color(0xFF06D6A0) : Colors.white38,
-                        tooltip: audio.isMusicEnabled ? 'Tắt nhạc nền' : 'Bật nhạc nền',
-                        style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFF1E2536),
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(30, 30),
-                        ),
-                      ),
-                      const SizedBox(width: 3),
-                      // Restart Button
-                      IconButton(
-                        onPressed: onRestart,
-                        icon: const Icon(Icons.refresh_rounded, size: 16),
-                        color: Colors.white70,
-                        tooltip: 'Chơi lại',
-                        style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFF1E2536),
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(30, 30),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+
+                  // Action Buttons: Settings, Audio, Restart
+                  ListenableBuilder(
+                    listenable: AudioManager.instance,
+                    builder: (context, _) {
+                      final audio = AudioManager.instance;
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Settings Button
+                          IconButton(
+                            onPressed: () => _showSettings(context),
+                            icon: const Icon(Icons.settings_rounded, size: 16),
+                            color: const Color(0xFFFFD166),
+                            tooltip: loc.tr('settings'),
+                            style: IconButton.styleFrom(
+                              backgroundColor: const Color(0xFF1E2536),
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(30, 30),
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          // Music Toggle Button
+                          IconButton(
+                            onPressed: () => audio.toggleMusic(),
+                            icon: Icon(
+                              audio.isMusicEnabled ? Icons.music_note_rounded : Icons.music_off_rounded,
+                              size: 16,
+                            ),
+                            color: audio.isMusicEnabled ? const Color(0xFF06D6A0) : Colors.white38,
+                            tooltip: audio.isMusicEnabled ? loc.tr('music_off') : loc.tr('music_on'),
+                            style: IconButton.styleFrom(
+                              backgroundColor: const Color(0xFF1E2536),
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(30, 30),
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          // Restart Button
+                          IconButton(
+                            onPressed: onRestart,
+                            icon: const Icon(Icons.refresh_rounded, size: 16),
+                            color: Colors.white70,
+                            tooltip: loc.tr('play_again'),
+                            style: IconButton.styleFrom(
+                              backgroundColor: const Color(0xFF1E2536),
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(30, 30),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
+              const SizedBox(height: 10),
 
           // Current Score with Miki Mascot
           Row(
@@ -234,9 +248,9 @@ class ScoreBoardWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'ĐIỂM SỐ',
-                    style: TextStyle(
+                  Text(
+                    loc.tr('score'),
+                    style: const TextStyle(
                       color: Colors.white60,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -283,7 +297,7 @@ class ScoreBoardWidget extends StatelessWidget {
                             ],
                           ),
                           child: Text(
-                            'x$combo 🔥',
+                            '${loc.tr('combo')} x$combo 🔥',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 11,
@@ -301,6 +315,8 @@ class ScoreBoardWidget extends StatelessWidget {
         ],
       ),
     );
+  },
+);
   }
 
   Widget _buildModeButton({
