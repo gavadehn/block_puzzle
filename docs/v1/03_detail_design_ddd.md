@@ -388,22 +388,225 @@ graph LR
   * Hiển thị mượt mà qua `AnimatedSwitcher(duration: 200ms)`.
   * Nút Xoay Trái ↺ (`rotate_left_rounded`) & Nút Xoay Phải ↻ (`rotate_right_rounded`).
 
+### 5.4. Bảng Mã Màu & Quy Chuẩn Thị Giác (Color Palette & Visual Theme)
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             BLOCK PUZZLE COLOR THEME                        │
+├──────────────────────┬────────────────────────┬─────────────────────────────┤
+│ Tên màu / Thành phần │ Mã Hex (Color Value)   │ Mục đích sử dụng            │
+├──────────────────────┼────────────────────────┼─────────────────────────────┤
+│ Background Nền tối   │ #0D111A -> #141A29     │ Gradient nền màn hình chính │
+│ Container / Card     │ #1E2536 / #131822      │ Khung cờ, Khay gạch, Card   │
+│ Border Viền xám      │ #2C3549 / #333E5A      │ Viền ô cờ, viền nút bấm     │
+│ Accent Vàng Gold     │ #FFD166                │ Cúp Kỷ lục, Icon Cài đặt    │
+│ Accent Xanh Ngọc     │ #06D6A0                │ Nút Easy, Switch BGM, Viền  │
+│ Accent Đỏ Neon Lửa   │ #FF007F -> #FF758F     │ Huy hiệu Combo Streak 🔥    │
+│ Mascot Border        │ #FFD166 (width: 2.2px) │ Viền tròn phát sáng Miki    │
+└──────────────────────┴────────────────────────┴─────────────────────────────┘
+```
+
 ---
 
-### 5.4. Các Hộp thoại Modal (Dialogs)
-1. **`SettingsDialog`:**
-   * Chọn ngôn ngữ: 3 nút lựa chọn 🇻🇳 Tiếng Việt, 🇬🇧 English, 🇯🇵 日本語.
-   * Danh sách Playlist BGM: 5 Switch điều khiển `Track 1` đến `Track 5` với màu `activeThumbColor: Color(0xFF06D6A0)`.
-2. **`LeaderboardDialog`:**
-   * Bảng điểm 2 Tab (Khó / Dễ) điều khiển bằng `TabController`.
-   * Danh sách Top 10 kèm huy hiệu: 🥇 Top 1 (Vàng), 🥈 Top 2 (Bạc), 🥉 Top 3 (Đồng).
-3. **`NewRecordDialog`:**
-   * Hiệu ứng phóng to xuất hiện (`ScaleTransition`).
-   * Huy hiệu Kỷ lục Mới `🎉 KỶ LỤC MỚI! 🎉`, hiển thị con số kỷ lục nổi bật và nút "Tiếp tục".
-4. **`GameOverDialog`:**
-   * Hiển thị điểm số đạt được, điểm kỷ lục cao nhất của chế độ và nút "Chơi lại".
+### 5.5. Thiết Kế Bản Vẽ Giao Diện (Screen Design & Wireframe Layouts)
+
+#### 1. Screen Design: Màn hình Chơi Game - Chế độ Khó (Hard Mode Wireframe)
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│ [🏆 KỶ LỤC  4520]        ( 🔥 Khó |  ✨ Dễ )         [ ⚙️ ] [ 🎵 ] [ 🔄 ]│  <- Top Header Bar
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│                    ╭────────╮   ĐIỂM SỐ                                 │
+│                    │ (•‿•)  │   280  [Combo x2 🔥]                      │  <- Mascot & Score
+│                    │  MIKI  │                                           │
+│                    ╰────────╯                                           │
+│                                                                         │
+│             ┌───┬───┬───┬───┬───┬───┬───┬───┐                           │
+│             │   │   │   │   │   │   │   │   │  (Row 0)                  │
+│             ├───┼───┼───┼───┼───┼───┼───┼───┤                           │
+│             │   │ █ │ █ │ █ │   │   │   │   │  (Row 1)                  │
+│             ├───┼───┼───┼───┼───┼───┼───┼───┤                           │
+│             │   │   │   │ █ │   │   │   │   │  (Row 2)                  │
+│             ├───┼───┼───┼───┼───┼───┼───┼───┤                           │
+│             │   │   │   │   │   │ █ │ █ │   │  (Row 3)                  │
+│             ├───┼───┼───┼───┼───┼───┼───┼───┤                           │
+│             │   │   │   │   │   │ █ │ █ │   │  (Row 4)                  │  <- Game Board (8x8)
+│             ├───┼───┼───┼───┼───┼───┼───┼───┤                           │
+│             │ █ │ █ │ █ │ █ │ █ │ █ │ █ │ █ │  (Row 5 - Sắp nổ!)        │
+│             ├───┼───┼───┼───┼───┼───┼───┼───┤                           │
+│             │   │   │   │   │   │   │   │   │  (Row 6)                  │
+│             ├───┼───┼───┼───┼───┼───┼───┼───┤                           │
+│             │   │   │   │   │   │   │   │   │  (Row 7)                  │
+│             └───┴───┴───┴───┴───┴───┴───┴───┘                           │
+│                                                                         │
+│                                                                         │
+│         ┌──────────────┐     ┌──────────────┐     ┌──────────────┐      │
+│         │   (96x96)    │     │   (96x96)    │     │   (96x96)    │      │
+│         │     ███      │     │      █       │     │     ██       │      │  <- Hand Tray (3 Slots)
+│         │      █       │     │     ███      │     │     ██       │      │
+│         └──────────────┘     └──────────────┘     └──────────────┘      │
+│             Slot 0                Slot 1               Slot 2           │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
+
+#### 2. Screen Design: Màn hình Chế độ Dễ khi Chọn Khối & Thanh Xoay (Easy Mode Wireframe)
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│ [🏆 KỶ LỤC  3200]        (  🔥 Khó | ✨ Dễ  )        [ ⚙️ ] [ 🎵 ] [ 🔄 ]│
+├─────────────────────────────────────────────────────────────────────────┤
+│                    ╭────────╮   ĐIỂM SỐ                                 │
+│                    │ (•‿•)  │   150                                     │
+│                    │  MIKI  │                                           │
+│                    ╰────────╯                                           │
+│                                                                         │
+│             ┌───┬───┬───┬───┬───┬───┬───┬───┐                           │
+│             │   │   │   │   │   │   │   │   │                           │
+│             │   │   │   │   │   │   │   │   │  (Bàn cờ 8x8)             │
+│             │   │   │   │   │   │   │   │   │                           │
+│             └───┴───┴───┴───┴───┴───┴───┴───┘                           │
+│                                                                         │
+│              [ ↺ Xoay Trái ]          [ ↻ Xoay Phải ]                   │  <- Rotation Bar (Easy Mode)
+│                                                                         │
+│         ╔══════════════╗     ┌──────────────┐     ┌──────────────┐      │
+│         ║ ❇️ ĐANG CHỌN ║     │              │     │              │      │
+│         ║     ████     ║     │      ██      │     │      █       │      │  <- Slot 0 Highlight
+│         ║      █       ║     │      ██      │     │      █       │      │     Viền Xanh Neon
+│         ╚══════════════╝     └──────────────┘     └──────────────┘      │
+│             Slot 0                Slot 1               Slot 2           │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### 3. Screen Design: Thao tác Kéo & Hiển thị Xem trước Bóng mờ (Drag & Preview Wireframe)
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│             ┌───┬───┬───┬───┬───┬───┬───┬───┐                           │
+│             │   │   │   │   │   │   │   │   │                           │
+│             ├───┼───┼───┼───┼───┼───┼───┼───┤                           │
+│             │   │ ░ │ ░ │ ░ │   │   │   │   │  <- [░ ░ ░] BÓNG MỜ XEM   │
+│             ├───┼───┼───┼───┼───┼───┼───┼───┤     TRƯỚC (PREVIEW SNAP)   │
+│             │   │   │   │ ░ │   │   │   │   │                            │
+│             └───┴───┴───┴───┴───┴───┴───┴───┘                           │
+│                        ▲                                                │
+│                        │ [Khoảng nâng touchLift = 50px]                 │
+│                        │                                                │
+│                       [███] <- KHỐI GẠCH PHÓNG TO BAY THEO              │
+│                        [█]                                              │
+│                         👆  <- Điểm tiếp xúc ngón tay chạm              │
+│                                                                         │
+│         ┌──────────────┐     ┌──────────────┐     ┌──────────────┐      │
+│         │ (Mờ 20% khi  │     │              │     │              │      │
+│         │  đang kéo)   │     │      ██      │     │      █       │      │
+│         └──────────────┘     └──────────────┘     └──────────────┘      │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### 4. Dialog Design: Hộp thoại Cài đặt (Settings Dialog Wireframe)
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       ⚙️ CÀI ĐẶT (SETTINGS)                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   🌐 NGÔN NGỮ (LANGUAGE)                                                │
+│   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐              │
+│   │ 🇻🇳 Tiếng Việt│    │  🇬🇧 English  │    │  🇯🇵 日本語   │              │
+│   │   (Đang chọn)│    │              │    │              │              │
+│   └──────────────┘    └──────────────┘    └──────────────┘              │
+│                                                                         │
+│   🎵 DANH SÁCH NHẠC NỀN (BGM PLAYLIST)                                  │
+│   ┌────────────────────────────────────────────────────────┐            │
+│   │  [🎵]  Track 1 - Lofi Chill Breeze           ( ON  [●]) │            │
+│   │  [🎵]  Track 2 - Puzzle Rhythm Pop           ( ON  [●]) │            │
+│   │  [🎵]  Track 3 - Gentle Piano Melody         ( ON  [●]) │            │
+│   │  [🎵]  Track 4 - Acoustic Garden             ( OFF [○]) │            │
+│   │  [🎵]  Track 5 - Dreamy Synthwave            ( ON  [●]) │            │
+│   └────────────────────────────────────────────────────────┘            │
+│                                                                         │
+│                      ┌──────────────────────┐                           │
+│                      │      ĐÓNG (CLOSE)    │                           │
+│                      └──────────────────────┘                           │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### 5. Dialog Design: Hộp thoại Bảng Kỷ Lục (Leaderboard Dialog Wireframe)
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     🏆 BẢNG KỶ LỤC (LEADERBOARD)                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│          ┌─────────────────────────┬─────────────────────────┐          │
+│          │       🔥 CHẾ ĐỘ KHÓ     │       ✨ CHẾ ĐỘ DỄ      │          │
+│          │        (Đang chọn)      │                         │          │
+│          └─────────────────────────┴─────────────────────────┘          │
+│                                                                         │
+│   ┌───┬──────────────────────────────────┬──────────────┬───────────┐   │
+│   │HẠNG│            THỜI GIAN             │   ĐIỂM SỐ    │  HUY HIỆU │   │
+│   ├───┼──────────────────────────────────┼──────────────┼───────────┤   │
+│   │ 1 │  23/09/2026 18:30                │    4,520     │    🥇     │   │
+│   │ 2 │  23/09/2026 17:15                │    3,890     │    🥈     │   │
+│   │ 3 │  22/09/2026 20:00                │    3,100     │    🥉     │   │
+│   │ 4 │  22/09/2026 14:20                │    2,450     │     4     │   │
+│   │ 5 │  21/09/2026 09:10                │    1,980     │     5     │   │
+│   │...│  ...                             │    ...       │    ...    │   │
+│   │ 10│  20/09/2026 19:45                │      850     │    10     │   │
+│   └───┴──────────────────────────────────┴──────────────┴───────────┘   │
+│                                                                         │
+│                      ┌──────────────────────┐                           │
+│                      │      ĐÓNG (CLOSE)    │                           │
+│                      └──────────────────────┘                           │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### 6. Dialog Design: Hộp thoại Kỷ Lục Mới & Kết Thúc Ván (New Record & Game Over)
+
+```text
+    ┌───────────────────────────────────┐     ┌───────────────────────────────────┐
+    │        🎉 KỶ LỤC MỚI! 🎉          │     │         TRÒ CHƠI KẾT THÚC         │
+    ├───────────────────────────────────┤     ├───────────────────────────────────┤
+    │                                   │     │                                   │
+    │              🏆                   │     │                 💔                │
+    │      CHÚC MỪNG BẠN ĐÃ ĐẠT         │     │         KHÔNG CÒN NƯỚC ĐI!        │
+    │         ĐỈNH CAO MỚI!             │     │                                   │
+    │                                   │     │        ĐIỂM SỐ:    1,420          │
+    │            4,520                  │     │        KỶ LỤC:     4,520          │
+    │                                   │     │                                   │
+    │       (🔥 Chế độ Khó)             │     │         (🔥 Chế độ Khó)           │
+    │                                   │     │                                   │
+    │      ┌────────────────────┐       │     │       ┌────────────────────┐      │
+    │      │    TIẾP TỤC 🚀     │       │     │       │    CHƠI LẠI 🔄     │      │
+    │      └────────────────────┘       │     │       └────────────────────┘      │
+    └───────────────────────────────────┘     └───────────────────────────────────┘
+          [NewRecordDialog Wireframe]               [GameOverDialog Wireframe]
+```
+
+---
+
+### 5.6. Đặc tả Chi tiết các Hộp thoại Modal trong Mã nguồn (Dialog Implementation)
+1. **`SettingsDialog` (`client/lib/ui/widgets/settings_dialog.dart`):**
+   * Bọc trong `ListenableBuilder` lắng nghe cả `LocaleService` và `AudioManager`.
+   * Lựa chọn ngôn ngữ hiển thị dạng 3 nút Pill bo cong `BorderRadius.circular(16)`.
+   * Danh sách 5 BGM Track dùng `Switch` với màu `activeThumbColor: Color(0xFF06D6A0)`.
+2. **`LeaderboardDialog` (`client/lib/ui/widgets/leaderboard_dialog.dart`):**
+   * Quản lý Tab qua `TabController(length: 2)`.
+   * Danh sách Top 10 dùng `ListView.separated` với Card nền `Color(0xFF1E2536)`.
+3. **`NewRecordDialog` (`client/lib/ui/widgets/new_record_dialog.dart`):**
+   * Hoạt ảnh phóng to `ScaleTransition(animation: CurvedAnimation(curve: Curves.elasticOut))`.
+   * Phát âm thanh chúc mừng `newrecord.mp3`.
+4. **`GameOverDialog` (`client/lib/ui/widgets/game_over_dialog.dart`):**
+   * Hiển thị điểm số đạt được và nút "Chơi lại" gọi callback `onRestart()`.
 
 ## 6. CHI TIẾT TẦNG DỊCH VỤ HẠ TẦNG (SERVICES SPECIFICATION)
 
