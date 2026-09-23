@@ -12,6 +12,9 @@ jobs:
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
 
     steps:
       - name: Checkout repository
@@ -43,13 +46,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: block_puzzle-android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: client/build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload Android App Bundle (AAB)
         uses: actions/upload-artifact@v4
         with:
           name: block_puzzle-android-aab
-          path: build/app/outputs/bundle/release/app-release.aab
+          path: client/build/app/outputs/bundle/release/app-release.aab
 
   # ==========================================
   # 2. BUILD IOS (.ipa)
@@ -57,6 +60,9 @@ jobs:
   build-ios:
     name: Build iOS IPA
     runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: client
 
     steps:
       - name: Checkout repository
@@ -85,4 +91,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: block_puzzle-ios-ipa
-          path: block_puzzle.ipa
+          path: client/block_puzzle.ipa

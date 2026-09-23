@@ -1,17 +1,19 @@
-# block_puzzle
+# Block Puzzle Game (Multiplatform)
 
-A new Flutter project.
+A modern Block Puzzle game built with Flutter (iOS, Android, Windows, Web).
 
-## Getting Started
+## Repository Structure
 
-This project is a starting point for a Flutter application.
+- `client/` - Flutter application source code & platform configurations
+- `docs/` - Project documentation & technical specifications
+  - `docs/v1/` - Version 1 (Offline Standalone) specifications (SRS, HLD, DDD)
+  - `docs/v2_online/` - Version 2 (Online & Cloud Sync) specifications
+- `server/` - Backend services & APIs for Version 2 Online features
 
-A few resources to get you started if this is your first Flutter project:
+## Quick Start (Client)
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+cd client
+flutter pub get
+flutter run
+```
