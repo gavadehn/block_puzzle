@@ -97,6 +97,7 @@ class HandTrayWidget extends StatelessWidget {
                   final dragData = DragBlockData(handIndex: index, shape: shape);
 
                   return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () {
                       if (isEasyMode) {
                         controller.selectHandBlock(index);
@@ -127,6 +128,7 @@ class HandTrayWidget extends StatelessWidget {
                       ),
                       child: Draggable<DragBlockData>(
                         data: dragData,
+                        hitTestBehavior: HitTestBehavior.opaque,
                         dragAnchorStrategy: pointerDragAnchorStrategy,
                         onDragStarted: () {
                           if (isEasyMode && selectedIdx != index) {
@@ -149,12 +151,14 @@ class HandTrayWidget extends StatelessWidget {
                         ),
                         childWhenDragging: Opacity(
                           opacity: 0.2,
-                          child: Center(
-                            child: FittedBox(
-                              child: BlockShapeWidget(
-                                shape: shape,
-                                cellSize: 20,
-                                spacing: 2,
+                          child: SizedBox.expand(
+                            child: Center(
+                              child: FittedBox(
+                                child: BlockShapeWidget(
+                                  shape: shape,
+                                  cellSize: 20,
+                                  spacing: 2,
+                                ),
                               ),
                             ),
                           ),
@@ -162,14 +166,16 @@ class HandTrayWidget extends StatelessWidget {
                         child: AnimatedOpacity(
                           duration: const Duration(milliseconds: 200),
                           opacity: canFit ? 1.0 : 0.35,
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: FittedBox(
-                                child: BlockShapeWidget(
-                                  shape: shape,
-                                  cellSize: 20,
-                                  spacing: 2,
+                          child: SizedBox.expand(
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: FittedBox(
+                                  child: BlockShapeWidget(
+                                    shape: shape,
+                                    cellSize: 20,
+                                    spacing: 2,
+                                  ),
                                 ),
                               ),
                             ),
